@@ -1,3 +1,4 @@
+* 字符串String类的源码解读, 由于本人水平有限, 如有纰漏之处, 烦请留言指正. (Email: wp571988@163.com)
 ```java
 public final class String 
       implements java.io.Serializable, Comparable<String>, CharSequence {
