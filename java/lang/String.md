@@ -94,4 +94,42 @@ public final class String
     
     public void getChars(int srcBegin, int srcEnd, char dst[], int dstBegin) {...}
     
+    public void getChars(int srcBegin, int srcEnd, char dst[], int dstBegin) {...}
+    
+    public byte[] getBytes(String charsetName) throws UnsupportedEncodingException {...}
+     
+    public byte[] getBytes(Charset charset) {...}
+    
+    public byte[] getBytes() {...}
+    
+    //判断字符串是否由相同的字符序列组成
+    public boolean equals(Object anObject) {
+        if (this == anObject) {   
+            return true;
+        }
+        if (anObject instanceof String) {
+            String anotherString = (String) anObject;
+            int n = value.length;
+            if (n == anotherString.value.length) {
+                char v1[] = value;
+                char v2[] = anotherString.value;
+                int i = 0;
+                while (n-- != 0) {
+                    if (v1[i] != v2[i])
+                            return false;
+                    i++;
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+   
+    public boolean contentEquals(StringBuffer sb) {
+        synchronized (sb) {
+            return contentEquals((CharSequence) sb);
+        }
+    }
+    
+    
 }
