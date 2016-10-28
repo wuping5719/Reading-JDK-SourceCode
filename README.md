@@ -1,2 +1,2 @@
-# Reading-JDK-SourceCode
-JDK source learning notes
+# Reading-Java-SourceCode
+Java source learning notes
