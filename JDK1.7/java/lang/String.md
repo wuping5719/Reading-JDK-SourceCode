@@ -190,52 +190,39 @@ public final class String
     }
     
     String(char[] value, boolean share) {...}
-    
     public String(char value[], int offset, int count) {...}
-    
     public String(int[] codePoints, int offset, int count) {...}
-    
-    private static void checkBounds(byte[] bytes, int offset, int length) {...}
-    
     public String(byte bytes[], int offset, int length, String charsetName) 
         throws UnsupportedEncodingException {...}
     
+    private static void checkBounds(byte[] bytes, int offset, int length) {...}
+   
     public boolean contentEquals(CharSequence cs) {...}
     
     public boolean equalsIgnoreCase(String anotherString) {...}
     
     public int codePointAt(int index) {...}
-    
     public int codePointBefore(int index) {...}
-    
     public int codePointCount(int beginIndex, int endIndex) {...}
-    
     public int offsetByCodePoints(int index, int codePointOffset) {...}
     
     void getChars(char dst[], int dstBegin) {...}
-    
     public void getChars(int srcBegin, int srcEnd, char dst[], int dstBegin) {...}
-    
     public void getChars(int srcBegin, int srcEnd, char dst[], int dstBegin) {...}
     
     public byte[] getBytes(String charsetName) throws UnsupportedEncodingException {...}
-     
     public byte[] getBytes(Charset charset) {...}
     
     public byte[] getBytes() {...}
     public String(byte bytes[], int offset, int length, Charset charset) {...}
-    
     public String(byte bytes[], String charsetName) throws UnsupportedEncodingException {...}
-    
     public String(byte bytes[], Charset charset) {...}
-    
     public String(byte bytes[], int offset, int length) {...}
-    public boolean regionMatches(int toffset, String other, int ooffset, int len){...};
     
+    public boolean regionMatches(int toffset, String other, int ooffset, int len){...};
     public boolean regionMatches(boolean ignoreCase, int toffset, String other, int ooffset, int len) {...}
     
     public boolean startsWith(String prefix, int toffset) {...}
-    
     public boolean startsWith(String prefix) {...}
     
     public boolean endsWith(String suffix) {
@@ -245,15 +232,11 @@ public final class String
     public int hashCode() {...}
     
     public int indexOf(int ch) {...}
-    
     public int indexOf(int ch, int fromIndex) {...}
-    
     private int indexOfSupplementary(int ch, int fromIndex) {...}
-    
     public int lastIndexOf(int ch) {...}
         
     public String substring(int beginIndex, int endIndex) {...}
-    
     public CharSequence subSequence(int beginIndex, int endIndex) {...}
         
     public boolean matches(String regex) {...}
@@ -261,31 +244,24 @@ public final class String
     public boolean contains(CharSequence s) {...}
     
     public String replaceFirst(String regex, String replacement) {...}
-    
     public String replaceAll(String regex, String replacement) {...}
-    
     public String replace(CharSequence target, CharSequence replacement) {...}
     
     public String[] split(String regex) {...}
     
     public String toLowerCase(Locale locale) {...}
-    
     public String toLowerCase() {...}
     
     public String toUpperCase(Locale locale) {...}
-    
     public String toUpperCase() {...}
     
     public static String format(String format, Object... args) {...}
     
     public static String valueOf(Object obj) {...}
-    
     public static String valueOf(char data[]) {...}
-    
     public static String valueOf(char data[], int offset, int count) {...}
     
     public static String copyValueOf(char data[], int offset, int count) {...}
-    
     public static String copyValueOf(char data[]) {...}
     
 }
