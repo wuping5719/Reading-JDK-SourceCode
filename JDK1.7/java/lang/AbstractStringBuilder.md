@@ -195,5 +195,115 @@
     
     public AbstractStringBuilder appendCodePoint(int codePoint) {...}
     
+    //删除指定索引位置的字符
+    public AbstractStringBuilder deleteCharAt(int index) {
+        if ((index < 0) || (index >= count))
+            throw new StringIndexOutOfBoundsException(index);
+        System.arraycopy(value, index+1, value, index, count-index-1);
+        count--;
+        return this;
+    }
+    
+    //用参数字符串str替换从start开始到end结束的字符序列
+    public AbstractStringBuilder replace(int start, int end, String str) {
+        if (start < 0)
+            throw new StringIndexOutOfBoundsException(start);
+        if (start > count)
+            throw new StringIndexOutOfBoundsException("start > length()");
+        if (start > end)
+            throw new StringIndexOutOfBoundsException("start > end");
+
+        if (end > count)
+            end = count;
+        int len = str.length();
+        int newCount = count + len - (end - start);
+        ensureCapacityInternal(newCount);
+
+        System.arraycopy(value, end, value, start + len, count - end);
+        str.getChars(value, start);
+        count = newCount;
+        return this;
+    }
+    
+    //从start位置开始返回子串
+    public String substring(int start) {
+        return substring(start, count);
+    }
+    public CharSequence subSequence(int start, int end) {...}
+    public String substring(int start, int end) {...}
+    
+    //把字符数组插入到序列中的对应位置
+    public AbstractStringBuilder insert(int index, char[] str, int offset, int len) {
+        if ((index < 0) || (index > length()))
+            throw new StringIndexOutOfBoundsException(index);
+        if ((offset < 0) || (len < 0) || (offset > str.length - len))
+            throw new StringIndexOutOfBoundsException(
+                "offset " + offset + ", len " + len + ", str.length "
+                + str.length);
+        ensureCapacityInternal(count + len);
+        System.arraycopy(value, index, value, index + len, count - index);
+        System.arraycopy(str, offset, value, index, len);
+        count += len;
+        return this;
+    }
+    public AbstractStringBuilder insert(int offset, Object obj) {...}
+    public AbstractStringBuilder insert(int offset, String str) {...}
+    public AbstractStringBuilder insert(int offset, char[] str) {...}
+    public AbstractStringBuilder insert(int dstOffset, CharSequence s) {...}
+    public AbstractStringBuilder insert(int dstOffset, CharSequence s, int start, int end) {...}
+    
+    public AbstractStringBuilder insert(int offset, boolean b) {
+        return insert(offset, String.valueOf(b));
+    }
+    public AbstractStringBuilder insert(int offset, char c) {...}
+    public AbstractStringBuilder insert(int offset, int i) {...}
+    public AbstractStringBuilder insert(int offset, long l) {...}
+    public AbstractStringBuilder insert(int offset, float f) {...}
+    public AbstractStringBuilder insert(int offset, double d) {...}
+    
+    //返回字符串在序列中第一次出现的位置
+    public int indexOf(String str) {...}
+    public int indexOf(String str, int fromIndex) {...}
+    
+    //返回字符串在序列中最右边出现的位置
+    public int lastIndexOf(String str) {...}
+    public int lastIndexOf(String str, int fromIndex) {...}
+    
+    //翻转字符序列
+    public AbstractStringBuilder reverse() {
+        boolean hasSurrogate = false;
+        int n = count - 1;
+        for (int j = (n-1) >> 1; j >= 0; --j) {
+            char temp = value[j];
+            char temp2 = value[n - j];
+            if (!hasSurrogate) {
+                hasSurrogate = (temp >= Character.MIN_SURROGATE && temp <= Character.MAX_SURROGATE)
+                    || (temp2 >= Character.MIN_SURROGATE && temp2 <= Character.MAX_SURROGATE);
+            }
+            value[j] = temp2;
+            value[n - j] = temp;
+        }
+        if (hasSurrogate) {
+            // 反向所有有效的代理对
+            for (int i = 0; i < count - 1; i++) {
+                char c2 = value[i];
+                if (Character.isLowSurrogate(c2)) {
+                    char c1 = value[i + 1];
+                    if (Character.isHighSurrogate(c1)) {
+                        value[i++] = c1;
+                        value[i] = c2;
+                    }
+                }
+            }
+        }
+        return this;
+    }
+    
+    public abstract String toString();
+    
+    //contentEquals方法需要该方法
+    final char[] getValue() {
+        return value;
+    }
   }
 ```
