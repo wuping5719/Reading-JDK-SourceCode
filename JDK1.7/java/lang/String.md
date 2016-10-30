@@ -163,22 +163,22 @@ public final class String
                 if (!limited || list.size() < limit - 1) {
                     list.add(substring(off, next));
                     off = next + 1;
-                } else {    // last one
+                } else {    // 最后一个
                     //assert (list.size() == limit - 1);
                     list.add(substring(off, value.length));
                     off = value.length;
                     break;
                 }
             }
-            // If no match was found, return this
+            // 如果没有找到匹配，返回
             if (off == 0)
                 return new String[]{this};
 
-            // Add remaining segment
+            // 加入剩余的部分
             if (!limited || list.size() < limit)
                 list.add(substring(off, value.length));
 
-            // Construct result
+            // 构建结果
             int resultSize = list.size();
             if (limit == 0)
                 while (resultSize > 0 && list.get(resultSize - 1).length() == 0)
@@ -249,7 +249,99 @@ public final class String
     
     public String[] split(String regex) {...}
     
-    public String toLowerCase(Locale locale) {...}
+    //将字符串中的大写字符全部转换为小写
+    public String toLowerCase(Locale locale) {
+        if (locale == null) {
+            throw new NullPointerException();
+        }
+
+        int firstUpper;
+        final int len = value.length;
+
+        // 现在检查是否有需要改变的字符
+        scan: {
+            for (firstUpper = 0 ; firstUpper < len; ) {
+                char c = value[firstUpper];
+                if ((c >= Character.MIN_HIGH_SURROGATE)
+                        && (c <= Character.MAX_HIGH_SURROGATE)) {
+                    int supplChar = codePointAt(firstUpper);
+                    if (supplChar != Character.toLowerCase(supplChar)) {
+                        break scan;
+                    }
+                    firstUpper += Character.charCount(supplChar);
+                } else {
+                    if (c != Character.toLowerCase(c)) {
+                        break scan;
+                    }
+                    firstUpper++;
+                }
+            }
+            return this;
+        }
+
+        char[] result = new char[len];
+        int resultOffset = 0;  //结果可能会增长，所以i+resultoffset在结果中的处理位置
+
+        // 只复制前几个小写字符
+        System.arraycopy(value, 0, result, 0, firstUpper);
+
+        String lang = locale.getLanguage();
+        boolean localeDependent =
+                (lang == "tr" || lang == "az" || lang == "lt");
+        char[] lowerCharArray;
+        int lowerChar;
+        int srcChar;
+        int srcCount;
+        for (int i = firstUpper; i < len; i += srcCount) {
+            srcChar = (int)value[i];
+            if ((char)srcChar >= Character.MIN_HIGH_SURROGATE
+                    && (char)srcChar <= Character.MAX_HIGH_SURROGATE) {
+                srcChar = codePointAt(i);
+                srcCount = Character.charCount(srcChar);
+            } else {
+                srcCount = 1;
+            }
+            if (localeDependent || srcChar == '\u03A3') { // 希腊大写字母
+                lowerChar = ConditionalSpecialCasing.toLowerCaseEx(this, i, locale);
+            } else if (srcChar == '\u0130') { // 拉丁文大写字母I点
+                lowerChar = Character.ERROR;
+            } else {
+                lowerChar = Character.toLowerCase(srcChar);
+            }
+            if ((lowerChar == Character.ERROR)
+                    || (lowerChar >= Character.MIN_SUPPLEMENTARY_CODE_POINT)) {
+                if (lowerChar == Character.ERROR) {
+                    if (!localeDependent && srcChar == '\u0130') {
+                        lowerCharArray =
+                                ConditionalSpecialCasing.toLowerCaseCharArray(this, i, Locale.ENGLISH);
+                    } else {
+                        lowerCharArray =
+                                ConditionalSpecialCasing.toLowerCaseCharArray(this, i, locale);
+                    }
+                } else if (srcCount == 2) {
+                    resultOffset += Character.toChars(lowerChar, result, i + resultOffset) - srcCount;
+                    continue;
+                } else {
+                    lowerCharArray = Character.toChars(lowerChar);
+                }
+
+                // 如果需要的话，结果长度增长
+                int mapLen = lowerCharArray.length;
+                if (mapLen > srcCount) {
+                    char[] result2 = new char[result.length + mapLen - srcCount];
+                    System.arraycopy(result, 0, result2, 0, i + resultOffset);
+                    result = result2;
+                }
+                for (int x = 0; x < mapLen; ++x) {
+                    result[i + resultOffset + x] = lowerCharArray[x];
+                }
+                resultOffset += (mapLen - srcCount);
+            } else {
+                result[i + resultOffset] = (char)lowerChar;
+            }
+        }
+        return new String(result, 0, len + resultOffset);
+    }
     public String toLowerCase() {...}
     
     public String toUpperCase(Locale locale) {...}
