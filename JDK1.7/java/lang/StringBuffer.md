@@ -1,5 +1,5 @@
 * StringBuffer类的源码(JDK1.7)解读, 由于本人水平有限, 如有纰漏之处, 烦请留言指正. (Email: wp571988@163.com)   
-  StringBuffer是线程安全的，可变的字符序列。
+  StringBuffer是线程安全的，可变的字符序列, 继承AbstractStringBuilder抽象类。
 ```java
   public final class StringBuffer extends AbstractStringBuilder
        implements java.io.Serializable, CharSequence {
