@@ -3,10 +3,10 @@
   &nbsp;&nbsp; 两个子类的实例: Error和Exception，通常用于指示发生了异常情况。通常，这些实例是在异常情况的上下文中新近创建的，因此包含了相关的信息（比如堆栈跟踪数据）。   
   &nbsp;&nbsp; Exception类及其子类是Throwable的一种形式，它指出了合理的应用程序想要捕获的条件。   
   &nbsp;&nbsp; 注意它有四个构造函数:    
-    Throwable()     
-    Throwable(String message)    
-    Throwable(Throwable cause)    
-    Throwable(String message, Throwable cause)
+  &nbsp;&nbsp;&nbsp;&nbsp;  Throwable()     
+  &nbsp;&nbsp;&nbsp;&nbsp;  Throwable(String message)    
+  &nbsp;&nbsp;&nbsp;&nbsp;  Throwable(Throwable cause)    
+  &nbsp;&nbsp;&nbsp;&nbsp;  Throwable(String message, Throwable cause)
 ```java
   
 ```
