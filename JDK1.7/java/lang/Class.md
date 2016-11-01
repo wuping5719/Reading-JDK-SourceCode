@@ -2,7 +2,7 @@
   Class类的实例代表一个运行java应用程序的类和接口。枚举（enum）是一种class和注解（annotation）是一种接口。每一个数组也属于一个类，这个类被作为一个类对象所反映，这个类对象由同一个元素类型和维度的所有数组所共享。
   Class类实例的取值为原始的java类型： boolean, byte, char, short, int, long, float和double，关键字void也代表一种类对象。    
   此类与java的类加载机制紧密相关。
-```javay
+```java
   public final 
     class Class<T> implements java.io.Serializable,
                               java.lang.reflect.GenericDeclaration,
