@@ -7,6 +7,9 @@
   &nbsp;&nbsp;&nbsp;&nbsp;  Throwable(String message)    
   &nbsp;&nbsp;&nbsp;&nbsp;  Throwable(Throwable cause)    
   &nbsp;&nbsp;&nbsp;&nbsp;  Throwable(String message, Throwable cause)
+**#深入理解java异常处理机制：&nbsp; <http://blog.csdn.net/hguisu/article/details/6155636>
+<p><img src="http://images.cnblogs.com/cnblogs_com/wp5719/831982/o_Throwable.png" /></p>
+ 
 ```java
   public class Throwable implements Serializable {
     //版本号
@@ -54,6 +57,27 @@
         fillInStackTrace();
     }
     
-    //javaThrowable源码解析:http://wenku.baidu.com/link?url=RpVDFsboE00Ccpte1NrKl-FdA_Z1B_LAXQWSb7Dp8MefRW6PAHJX7MDKT1RlDLRypSJ40S1k5iyRRERPcZj6A3J3puXo-gNY35HwgCNp26a
+    //带有细节信息参数的构造函数
+    public Throwable(String message) {
+        fillInStackTrace();          //填充异常轨迹数组
+        detailMessage = message;     //初始化异常描述信息
+    }
+    
+    //cause表示起因对象, 带有细节信息和造成异常原因参数的构造函数, 
+    //与异常原因相关的细节信息不会自动写入Throwable类的详细信息中.
+    public Throwable(String message, Throwable cause) {
+        fillInStackTrace();
+        detailMessage = message;
+        this.cause = cause;
+    }
+    
+    //参数为起因对象cause的构造函数
+    public Throwable(Throwable cause) {
+        fillInStackTrace();
+        detailMessage = (cause==null ? null : cause.toString());
+        this.cause = cause;
+    }
+    
+    
   } 
 ```
