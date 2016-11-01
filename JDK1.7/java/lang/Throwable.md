@@ -78,6 +78,220 @@
         this.cause = cause;
     }
     
+    //带有启用禁用异常抑制，启用禁用堆栈跟踪等参数的保护构造函数
+    protected Throwable(String message, Throwable cause, boolean enableSuppression,
+                        boolean writableStackTrace) {
+        if (writableStackTrace) {
+            fillInStackTrace();
+        } else {
+            stackTrace = null;
+        }
+        detailMessage = message;
+        this.cause = cause;
+        if (!enableSuppression)
+            suppressedExceptions = null;
+   }
+   
+   //获取详细信息
+   public String getMessage() {
+        return detailMessage;
+   }
+   
+   //创建该异常的局部描述
+   public String getLocalizedMessage() {
+        return getMessage();
+   }
+   
+   //同步获取造成异常的起因对象，如果起因不存在或未知，则返回null.
+   public synchronized Throwable getCause() {
+        return (cause==this ? null : cause);
+   }
+   
+   //初始化起因对象, 这个方法只能在未被初始化的情况下调用一次 
+   public synchronized Throwable initCause(Throwable cause) {
+        if (this.cause != this)  //如果不是未初始化状态则抛出异常
+            throw new IllegalStateException("Can't overwrite cause with " +
+                                            Objects.toString(cause, "a null"), this);
+        if (cause == this)       //要设置的起因对象与自身相等则抛出异常  
+            throw new IllegalArgumentException("Self-causation not permitted", this);
+        this.cause = cause;     //设置起因对象 
+        return this;            //返回设置的起因的对象
+   }
+   
+   //字符串表示形式
+   public String toString() {...}
+   
+   //打印错误轨迹  
+   public void printStackTrace() {
+        printStackTrace(System.err);
+   }
+   
+   //打印错误轨迹
+   public void printStackTrace(PrintStream s) {
+        printStackTrace(new WrappedPrintStream(s));
+   }
+   private void printStackTrace(PrintStreamOrWriter s) {
+        // 通过提供一个身份平等的语义的堆来防范恶意覆盖Throwable.equals
+        Set<Throwable> dejaVu =
+            Collections.newSetFromMap(new IdentityHashMap<Throwable, Boolean>());
+        dejaVu.add(this);
+
+        synchronized (s.lock()) {
+            //打印堆栈信息
+            s.println(this);
+            StackTraceElement[] trace = getOurStackTrace();
+            for (StackTraceElement traceElement : trace)
+                s.println("\tat " + traceElement);
+
+            //如果有被抑制的异常，则打印出来
+            for (Throwable se : getSuppressed())
+                se.printEnclosedStackTrace(s, trace, SUPPRESSED_CAPTION, "\t", dejaVu);
+
+            //如果有异常起因，则打印异常起因
+            Throwable ourCause = getCause();
+            if (ourCause != null)
+                ourCause.printEnclosedStackTrace(s, trace, CAUSE_CAPTION, "", dejaVu);
+        }
+    }
     
+    //将堆栈跟踪作为指定堆栈跟踪的一个封闭的异常打印
+    private void printEnclosedStackTrace(PrintStreamOrWriter s, StackTraceElement[] enclosingTrace,
+                                         String caption, String prefix, Set<Throwable> dejaVu) {
+        assert Thread.holdsLock(s.lock());
+        if (dejaVu.contains(this)) {
+            s.println("\t[CIRCULAR REFERENCE:" + this + "]");
+        } else {
+            dejaVu.add(this);
+            // 计算和外围跟踪之间普通帧的数量
+            StackTraceElement[] trace = getOurStackTrace();
+            int m = trace.length - 1;            //m为当前异常轨迹数组的最后一个元素位置,   
+            int n = enclosingTrace.length - 1;   //n为封闭异常的异常轨迹数组的最后一个元素  
+            // 分别从两个数组的后面做循环, 如果相等则一直循环, 直到不等或数组到头
+            while (m >= 0 && n >=0 && trace[m].equals(enclosingTrace[n])) {
+                m--; n--;
+            }
+            int framesInCommon = trace.length - 1 - m;    //相同的个数
+
+            // 打印堆栈信息
+            s.println(prefix + caption + this);
+            for (int i = 0; i <= m; i++)
+                s.println(prefix + "\tat " + trace[i]);
+            if (framesInCommon != 0)             //如果有相同的则打印出相同的个数 
+                s.println(prefix + "\t... " + framesInCommon + " more");
+
+            // 如果有被抑制的异常，则打印出来
+            for (Throwable se : getSuppressed())
+                se.printEnclosedStackTrace(s, trace, SUPPRESSED_CAPTION,
+                                           prefix +"\t", dejaVu);
+
+            // 如果有异常起因，则打印异常起因
+            Throwable ourCause = getCause();
+            if (ourCause != null)
+                ourCause.printEnclosedStackTrace(s, trace, CAUSE_CAPTION, prefix, dejaVu);
+        }
+    }
+    
+    //打印错误轨迹
+    public void printStackTrace(PrintWriter s) {
+        printStackTrace(new WrappedPrintWriter(s));
+    }
+    
+    private abstract static class PrintStreamOrWriter {
+        //当使用StreamOrWriter时，返回被锁定的对象
+        abstract Object lock();
+
+        ///打印StreamOrWriter一行
+        abstract void println(Object o);
+    }
+    
+    private static class WrappedPrintStream extends PrintStreamOrWriter {...}
+    private static class WrappedPrintWriter extends PrintStreamOrWriter {...}
+    
+    //填充异常轨迹, 记录当前线程执行的堆栈帧状态
+    public synchronized Throwable fillInStackTrace() {
+        if (stackTrace != null ||
+            backtrace != null /* 脱离协议状态 */ ) {
+            fillInStackTrace(0);
+            stackTrace = UNASSIGNED_STACK;
+        }
+        return this;
+    }
+    // 本地方法
+    private native Throwable fillInStackTrace(int dummy);
+    
+    //返回当前的异常轨迹的拷贝
+    public StackTraceElement[] getStackTrace() {
+        return getOurStackTrace().clone();
+    }
+    
+    //获取当前的异常轨迹
+    private synchronized StackTraceElement[] getOurStackTrace() {
+        // 如果第一次调用此方法则初始化异常轨迹数组
+        if (stackTrace == UNASSIGNED_STACK ||
+            (stackTrace == null && backtrace != null)) {
+            int depth = getStackTraceDepth();                    //获得异常轨迹深度
+            stackTrace = new StackTraceElement[depth];           //创建新的异常轨迹数组, 并填充它
+            for (int i=0; i < depth; i++)
+                stackTrace[i] = getStackTraceElement(i);         //获取指定位标的异常轨迹
+        } else if (stackTrace == null) {
+            return UNASSIGNED_STACK;
+        }
+        return stackTrace;
+    }
+    
+    // 设置异常轨迹
+    public void setStackTrace(StackTraceElement[] stackTrace) {
+        // 验证参数
+        StackTraceElement[] defensiveCopy = stackTrace.clone();
+        for (int i = 0; i < defensiveCopy.length; i++) {
+            if (defensiveCopy[i] == null)         // 如果设置参数有空元素则抛出异常  
+                throw new NullPointerException("stackTrace[" + i + "]");
+        }
+
+        synchronized (this) {
+            if (this.stackTrace == null && // 不可变的栈
+                backtrace == null) // 测试协议状态
+                return;
+            this.stackTrace = defensiveCopy;
+        }
+    }
+    
+    //异常轨迹的深度, 0表示无法获得
+    native int getStackTraceDepth();
+    
+    // 获取指定位标的异常轨迹
+    native StackTraceElement getStackTraceElement(int index);
+    
+    //反序列化
+    private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {...}
+    //序列化
+    private synchronized void writeObject(ObjectOutputStream s) throws IOException {...}
+    
+    //添加被抑制的异常
+    public final synchronized void addSuppressed(Throwable exception) {
+        if (exception == this)
+            throw new IllegalArgumentException(SELF_SUPPRESSION_MESSAGE, exception);
+
+        if (exception == null)
+            throw new NullPointerException(NULL_CAUSE_MESSAGE);
+
+        if (suppressedExceptions == null) // 不记录被抑制的异常
+            return;
+
+        if (suppressedExceptions == SUPPRESSED_SENTINEL)
+            suppressedExceptions = new ArrayList<>(1);
+
+        suppressedExceptions.add(exception);
+    }
+
+    private static final Throwable[] EMPTY_THROWABLE_ARRAY = new Throwable[0];
+    
+    public final synchronized Throwable[] getSuppressed() {
+        if (suppressedExceptions == SUPPRESSED_SENTINEL ||
+            suppressedExceptions == null)
+            return EMPTY_THROWABLE_ARRAY;
+        else
+            return suppressedExceptions.toArray(EMPTY_THROWABLE_ARRAY);
+    }
   } 
 ```
