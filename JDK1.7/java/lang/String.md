@@ -1,8 +1,8 @@
 * 字符串String类的源码(JDK1.7)解读, 由于本人水平有限, 如有纰漏之处, 烦请留言指正. (Email: wp571988@163.com)   
   String类为什么是final?   
   主要是为了“效率”和“安全”. 若String允许被继承, 由于它的高度被使用率, 可能会降低程序的性能，所以String被定义成final.     
-  String，StringBuffer，StringBuilder三者在执行速度方面的比较：StringBuilder > StringBuffer > String.
-  对于三者使用的总结：
+  String，StringBuffer，StringBuilder三者在执行速度方面的比较：StringBuilder > StringBuffer > String.    
+  对于三者使用的总结：   
   &nbsp;&nbsp;&nbsp; (1) 如果要操作少量的数据用String；   
   &nbsp;&nbsp;&nbsp; (2) 单线程下操作字符串缓冲区，大量数据用StringBuilder；    
   &nbsp;&nbsp;&nbsp; (3) 多线程下操作字符串缓冲区，大量数据用StringBuffer。
