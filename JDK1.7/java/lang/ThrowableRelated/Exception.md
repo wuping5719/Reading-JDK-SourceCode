@@ -1,5 +1,5 @@
 * Exception类的源码(JDK1.7)解读, 由于本人水平有限, 如有纰漏之处, 烦请留言指正. (Email: wp571988@163.com)      
-  Java中的异常分为两大类：
+  Java中的异常分为两大类：    
   &nbsp;&nbsp; (1) 运行时异常(Runtime Exception)(Unchecked Exception).    
   &nbsp;&nbsp; (2) 非运行时异常(Checked Exception).    
 
