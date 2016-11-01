@@ -9,6 +9,7 @@
   &nbsp;&nbsp;&nbsp;&nbsp;  Throwable(String message, Throwable cause)     
 * 深入理解java异常处理机制：&nbsp; <http://blog.csdn.net/hguisu/article/details/6155636>
 <p><img src="http://images.cnblogs.com/cnblogs_com/wp5719/831982/o_Throwable.png" /></p>
+
 ```java
   public class Throwable implements Serializable {
     //版本号
