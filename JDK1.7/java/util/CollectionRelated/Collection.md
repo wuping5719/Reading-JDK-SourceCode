@@ -33,7 +33,7 @@
   各种Collections Framework接口的实现可随意利用底层Object方法的指定行为，而不管实现程序认为它是否合适。
   此接口是Java Collections Framework的一个成员。
   
-  <p><img src="http://images.cnblogs.com/cnblogs_com/wp5719/831982/o_Collections.gif" /></p>
+  <p><img src="http://images.cnblogs.com/cnblogs_com/wp5719/831982/o_Collections.png" /></p>
   上述类图中，实线边框的是实现类，比如ArrayList，LinkedList，HashMap等；折线边框的是抽象类，比如AbstractCollection，AbstractList，AbstractMap等；而点线边框的是接口，比如Collection，Iterator，List等。
 
 ```java
