@@ -1,7 +1,12 @@
 * Class类的源码(JDK1.7)解读, 由于本人水平有限, 如有纰漏之处, 烦请留言指正. (Email: wp571988@163.com)   
-  Class类的实例代表一个运行java应用程序的类和接口。枚举（enum）是一种class和注解（annotation）是一种接口。每一个数组也属于一个类，这个类被作为一个类对象所反映，这个类对象由同一个元素类型和维度的所有数组所共享。
-  Class类实例的取值为原始的java类型： boolean, byte, char, short, int, long, float和double，关键字void也代表一种类对象。    
-  此类与java的类加载机制紧密相关。
+  Class 类的实例表示正在运行的Java应用程序中的类和接口。枚举是一种类，注释是一种接口。每个数组属于被映射为Class对象的一个类，所有具有相同元素类型和维数的数组都共享该Class对象。基本的Java类型（boolean、byte、char、short、int、long、float和double）和关键字void也表示为Class对象。
+  Class没有公共构造方法。Class对象是在加载类时由Java虚拟机以及通过调用类加载器中的defineClass方法自动构造的。
+  以下示例使用 Class 对象来显示对象的类名：
+     void printClassName(Object obj) {
+         System.out.println("The class of " + obj + " is " + obj.getClass().getName());
+     }
+ 还可以使用一个类字面值（JLS Section 15.8.2）来获取指定类型（或 void）的Class对象。
+ 例如：System.out.println("The name of class Foo is: "+Foo.class.getName());
 ```java
   public final 
     class Class<T> implements java.io.Serializable,
