@@ -1,7 +1,7 @@
 * Queue接口的源码(JDK1.7)解读, 由于本人水平有限, 如有纰漏之处, 烦请留言指正. (Email: wp571988@163.com)   
    &nbsp;&nbsp; 在处理元素前用于保存元素的 collection。除了基本的 Collection 操作外，队列还提供其他的插入、提取和检查操作。每个方法都存在两种形式：一种抛出异常（操作失败时），另一种返回一个特殊值（null 或 false，具体取决于操作）。插入操作的后一种形式是用于专门为有容量限制的 Queue 实现设计的；在大多数实现中，插入操作不会失败。
 
-   &nbsp;&nbsp; 抛出异常	返回特殊值    
+   &nbsp;&nbsp; 抛出异常	返回特殊值    
    &nbsp;&nbsp; 插入	add(e)	offer(e)   
    &nbsp;&nbsp; 移除	remove()	poll()   
    &nbsp;&nbsp; 检查	element()	peek()
