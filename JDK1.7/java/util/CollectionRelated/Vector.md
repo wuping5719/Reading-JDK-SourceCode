@@ -24,8 +24,8 @@
      
      private static final long serialVersionUID = -2767605614048989439L;
      
-     //使用指定的初始容量和容量增量构造一个空的向量。
-     public Vector(int initialCapacity, int capacityIncrement) {
+    //使用指定的初始容量和容量增量构造一个空的向量。
+    public Vector(int initialCapacity, int capacityIncrement) {
         super();
         if (initialCapacity < 0)
             throw new IllegalArgumentException("Illegal Capacity: "+ initialCapacity);
