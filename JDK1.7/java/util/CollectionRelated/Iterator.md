@@ -1,4 +1,4 @@
-* Iterator类的源码(JDK1.7)解读, 由于本人水平有限, 如有纰漏之处, 烦请留言指正. (Email: wp571988@163.com)   
+* Iterator接口的源码(JDK1.7)解读, 由于本人水平有限, 如有纰漏之处, 烦请留言指正. (Email: wp571988@163.com)   
   对collection进行迭代的迭代器。迭代器取代了Java Collections Framework中的Enumeration。
   迭代器与枚举有两点不同：       
      迭代器允许调用者利用定义良好的语义在迭代期间从迭代器所指向的collection移除元素。             
