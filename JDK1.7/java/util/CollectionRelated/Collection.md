@@ -1,4 +1,4 @@
-* Collection类的源码(JDK1.7)解读, 由于本人水平有限, 如有纰漏之处, 烦请留言指正. (Email: wp571988@163.com)   
+* Collection接口的源码(JDK1.7)解读, 由于本人水平有限, 如有纰漏之处, 烦请留言指正. (Email: wp571988@163.com)   
   &nbsp;&nbsp; Collection层次结构中的根接口。Collection表示一组对象，这些对象也称为collection的元素。一些collection允许有重复的元素，
   而另一些则不允许。一些collection是有序的，而另一些则是无序的。JDK不提供此接口的任何直接实现：它提供更具体的子接口（如Set和List）实现。
   此接口通常用来传递collection，并在需要最大普遍性的地方操作这些collection。
