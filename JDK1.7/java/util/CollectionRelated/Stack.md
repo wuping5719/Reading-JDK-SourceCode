@@ -1,7 +1,7 @@
 * Stack类的源码(JDK1.7)解读, 由于本人水平有限, 如有纰漏之处, 烦请留言指正. (Email: wp571988@163.com)   
-  &nbsp;&nbsp; Stack类表示后进先出（LIFO）的对象堆栈。它通过五个操作对类Vector进行了扩展 ，允许将向量视为堆栈。它提供了通常的 push 和 pop 操作，以及取堆栈顶点的 peek 方法、测试堆栈是否为空的 empty 方法、在堆栈中查找项并确定到堆栈顶距离的 search 方法。
-  &nbsp;&nbsp; 首次创建堆栈时，它不包含项。
-  &nbsp;&nbsp; Deque 接口及其实现提供了 LIFO 堆栈操作的更完整和更一致的 set，应该优先使用此 set，而非此类。
+  &nbsp;&nbsp; Stack类表示后进先出（LIFO）的对象堆栈。它通过五个操作对类Vector进行了扩展 ，允许将向量视为堆栈。它提供了通常的 push 和 pop 操作，以及取堆栈顶点的 peek 方法、测试堆栈是否为空的 empty 方法、在堆栈中查找项并确定到堆栈顶距离的 search 方法。     
+  &nbsp;&nbsp; 首次创建堆栈时，它不包含项。     
+  &nbsp;&nbsp; Deque 接口及其实现提供了 LIFO 堆栈操作的更完整和更一致的 set，应该优先使用此 set，而非此类。    
   &nbsp;&nbsp; 例如：Deque<Integer> stack = new ArrayDeque<Integer>();
  
 ```java
