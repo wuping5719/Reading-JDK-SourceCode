@@ -4,8 +4,8 @@
    &nbsp;&nbsp; 此接口定义在双端队列两端访问元素的方法。提供插入、移除和检查元素的方法。每种方法都存在两种形式：一种形式在操作失败时抛出异常，另一种形式返回一个特殊值（null 或 false，具体取决于操作）。插入操作的后一种形式是专为使用有容量限制的 Deque 实现设计的；在大多数实现中，插入操作不能失败。
 
    &nbsp;&nbsp; 下表总结了上述 12 种方法：    
-   &nbsp;&nbsp;&nbsp;&nbsp; 第一个元素（头部）	最后一个元素（尾部）     
-   &nbsp;&nbsp;&nbsp;&nbsp; 抛出异常	特殊值	抛出异常	特殊值    
+   &nbsp;&nbsp;&nbsp;&nbsp; 第一个元素（头部）	 最后一个元素（尾部）        
+   &nbsp;&nbsp;&nbsp;&nbsp; 抛出异常	特殊值	   抛出异常	特殊值    
    &nbsp;&nbsp;&nbsp;&nbsp; 插入	addFirst(e)	offerFirst(e)	addLast(e)	offerLast(e)    
    &nbsp;&nbsp;&nbsp;&nbsp; 移除	removeFirst()	pollFirst()	removeLast()	pollLast()     
    &nbsp;&nbsp;&nbsp;&nbsp; 检查	getFirst()	peekFirst()	getLast()	peekLast()     
