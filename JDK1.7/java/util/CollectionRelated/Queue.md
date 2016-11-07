@@ -1,10 +1,10 @@
 * Queue接口的源码(JDK1.7)解读, 由于本人水平有限, 如有纰漏之处, 烦请留言指正. (Email: wp571988@163.com)   
    &nbsp;&nbsp; 在处理元素前用于保存元素的 collection。除了基本的 Collection 操作外，队列还提供其他的插入、提取和检查操作。每个方法都存在两种形式：一种抛出异常（操作失败时），另一种返回一个特殊值（null 或 false，具体取决于操作）。插入操作的后一种形式是用于专门为有容量限制的 Queue 实现设计的；在大多数实现中，插入操作不会失败。
 
-   &nbsp;&nbsp; 抛出异常	返回特殊值
-   &nbsp;&nbsp; 插入	add(e)	offer(e)
-   &nbsp;&nbsp; 移除	remove()	poll()
-   &nbsp;&nbsp; 检查	element()	peek()
+   &nbsp;&nbsp; 抛出异常	返回特殊值    
+   &nbsp;&nbsp; 插入	add(e)	offer(e)   
+   &nbsp;&nbsp; 移除	remove()	poll()   
+   &nbsp;&nbsp; 检查	element()	peek()
   
    &nbsp;&nbsp; 队列通常（但并非一定）以 FIFO（先进先出）的方式排序各个元素。不过优先级队列和 LIFO 队列（或堆栈）例外，前者根据提供的比较器或元素的自然顺序对元素进行排序，后者按 LIFO（后进先出）的方式对元素进行排序。无论使用哪种排序方式，队列的头 都是调用 remove() 或 poll() 所移除的元素。在 FIFO 队列中，所有的新元素都插入队列的末尾。其他种类的队列可能使用不同的元素放置规则。每个 Queue 实现必须指定其顺序属性。
 
