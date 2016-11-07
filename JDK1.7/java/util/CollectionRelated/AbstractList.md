@@ -1,17 +1,17 @@
 * AbstractList抽象类的源码(JDK1.7)解读, 由于本人水平有限, 如有纰漏之处, 烦请留言指正. (Email: wp571988@163.com)   
-  AbstractList抽象类提供 List 接口的骨干实现，以最大限度地减少实现“随机访问”数据存储（如数组）支持的该接口所需的工作。对于连续的访问数据（如链表），应优先使用 AbstractSequentialList，而不是此类。
+   &nbsp;&nbsp; AbstractList抽象类提供 List 接口的骨干实现，以最大限度地减少实现“随机访问”数据存储（如数组）支持的该接口所需的工作。对于连续的访问数据（如链表），应优先使用 AbstractSequentialList，而不是此类。
 
-  要实现不可修改的列表，编程人员只需扩展此类，并提供 get(int) 和 size() 方法的实现。
+   &nbsp;&nbsp; 要实现不可修改的列表，编程人员只需扩展此类，并提供 get(int) 和 size() 方法的实现。
 
-  要实现可修改的列表，编程人员必须另外重写 set(int, E) 方法（否则将抛出 UnsupportedOperationException）。如果列表为可变大小，则编程人员必须另外重写 add(int, E) 和 remove(int) 方法。
+   &nbsp;&nbsp; 要实现可修改的列表，编程人员必须另外重写 set(int, E) 方法（否则将抛出 UnsupportedOperationException）。如果列表为可变大小，则编程人员必须另外重写 add(int, E) 和 remove(int) 方法。
 
-  按照 Collection 接口规范中的建议，编程人员通常应该提供一个 void（无参数）和 collection 构造方法。
+   &nbsp;&nbsp; 按照 Collection 接口规范中的建议，编程人员通常应该提供一个 void（无参数）和 collection 构造方法。
 
-  与其他抽象 collection 实现不同，编程人员不必提供迭代器实现；迭代器和列表迭代器由此类在以下“随机访问”方法上实现：get(int)、set(int, E)、add(int, E) 和 remove(int)。
+   &nbsp;&nbsp; 与其他抽象 collection 实现不同，编程人员不必提供迭代器实现；迭代器和列表迭代器由此类在以下“随机访问”方法上实现：get(int)、set(int, E)、add(int, E) 和 remove(int)。
 
-  此类中每个非抽象方法的文档详细描述了其实现。如果要实现的 collection 允许更有效的实现，则可以重写所有这些方法。
+   &nbsp;&nbsp; 此类中每个非抽象方法的文档详细描述了其实现。如果要实现的 collection 允许更有效的实现，则可以重写所有这些方法。
 
-  此类是Java Collections Framework的成员。
+   &nbsp;&nbsp; 此类是Java Collections Framework的成员。
  
 ```java
   public abstract class AbstractList<E> extends AbstractCollection<E> implements List<E> {
