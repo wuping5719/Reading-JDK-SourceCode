@@ -1,5 +1,5 @@
-* AbstractSequentialList类的源码(JDK1.7)解读, 由于本人水平有限, 如有纰漏之处, 烦请留言指正. (Email: wp571988@163.com)   
-  &nbsp;&nbsp; AbstractSequentialList类提供了List接口的骨干实现，从而最大限度地减少了实现受“连续访问”数据存储（如链接列表）支持的此接口所需的工作。对于随机访问数据（如数组），应该优先使用 AbstractList，而不是先使用此类。
+* AbstractSequentialList抽象类的源码(JDK1.7)解读, 由于本人水平有限, 如有纰漏之处, 烦请留言指正. (Email: wp571988@163.com)   
+  &nbsp;&nbsp; AbstractSequentialList抽象类提供了List接口的骨干实现，从而最大限度地减少了实现受“连续访问”数据存储（如链接列表）支持的此接口所需的工作。对于随机访问数据（如数组），应该优先使用 AbstractList，而不是先使用此类。
 
   &nbsp;&nbsp; 从某种意义上说，此类与在列表的列表迭代器上实现“随机访问”方法（get(int index)、set(int index, E element)、add(int index, E element) 和 remove(int index)）的 AbstractList 类相对立，而不是其他关系。
 
