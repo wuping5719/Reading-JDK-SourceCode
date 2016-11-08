@@ -41,7 +41,7 @@
     }
     
     //构造一个与指定 collection 中的元素相同的新LinkedHashSet。
-    此LinkedHashSet创建使用的初始容量足以容纳指定collection的元素，使用的加载因子为默认加载因子(0.75)。
+    //此LinkedHashSet创建使用的初始容量足以容纳指定collection的元素，使用的加载因子为默认加载因子(0.75)。
     public LinkedHashSet(Collection<? extends E> c) {
         super(Math.max(2*c.size(), 11), .75f, true);
         addAll(c);
