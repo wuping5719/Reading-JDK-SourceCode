@@ -9,17 +9,17 @@
    &nbsp;&nbsp;&nbsp;&nbsp; 插入	addFirst(e)	offerFirst(e)	addLast(e)	offerLast(e)    
    &nbsp;&nbsp;&nbsp;&nbsp; 移除	removeFirst()	pollFirst()	removeLast()	pollLast()     
    &nbsp;&nbsp;&nbsp;&nbsp; 检查	getFirst()	peekFirst()	getLast()	peekLast()     
-   &nbsp;&nbsp; 此接口扩展了 Queue 接口。在将双端队列用作队列时，将得到 FIFO（先进先出）行为。将元素添加到双端队列的末尾，从双端队列的开头移除元素。从 Queue 接口继承的方法完全等效于 Deque 方法，如下表所示：
-
+   
+   &nbsp;&nbsp; 此接口扩展了 Queue 接口。在将双端队列用作队列时，将得到 FIFO（先进先出）行为。将元素添加到双端队列的末尾，从双端队列的开头移除元素。从 Queue 接口继承的方法完全等效于 Deque 方法，如下表所示：     
    &nbsp;&nbsp; Queue 方法	等效 Deque 方法     
    &nbsp;&nbsp;&nbsp;&nbsp; add(e)	addLast(e)    
    &nbsp;&nbsp;&nbsp;&nbsp; offer(e)	offerLast(e)    
    &nbsp;&nbsp;&nbsp;&nbsp; remove()	removeFirst()      
    &nbsp;&nbsp;&nbsp;&nbsp; poll()	pollFirst()     
    &nbsp;&nbsp;&nbsp;&nbsp; element()	getFirst()     
-   &nbsp;&nbsp;&nbsp;&nbsp; peek()	peekFirst()     
-   &nbsp;&nbsp; 双端队列也可用作 LIFO（后进先出）堆栈。应优先使用此接口而不是遗留 Stack 类。在将双端队列用作堆栈时，元素被推入双端队列的开头并从双端队列开头弹出。堆栈方法完全等效于 Deque 方法，如下表所示：
-
+   &nbsp;&nbsp;&nbsp;&nbsp; peek()	peekFirst()    
+   
+   &nbsp;&nbsp; 双端队列也可用作 LIFO（后进先出）堆栈。应优先使用此接口而不是遗留 Stack 类。在将双端队列用作堆栈时，元素被推入双端队列的开头并从双端队列开头弹出。堆栈方法完全等效于 Deque 方法，如下表所示：      
    &nbsp;&nbsp; 堆栈方法	等效 Deque 方法    
    &nbsp;&nbsp;&nbsp;&nbsp; push(e)	addFirst(e)    
    &nbsp;&nbsp;&nbsp;&nbsp; pop()	removeFirst()   
