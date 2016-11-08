@@ -351,13 +351,201 @@
             put(e.getKey(), e.getValue());
     }
     
-    //从此映射中移除指定键的映射关系（如果存在）
+    //从此映射中移除指定键的映射关系（如果存在）,返回映射值
     public V remove(Object key) {
         Entry<K,V> e = removeEntryForKey(key);
         return (e == null ? null : e.value);
     }
     
-    //
+    //从此映射中移除指定键的映射关系（如果存在），返回整个映射键-值对
+    final Entry<K,V> removeEntryForKey(Object key) {
+        if (size == 0) {
+            return null;
+        }
+        int hash = (key == null) ? 0 : hash(key);
+        int i = indexFor(hash, table.length);
+        Entry<K,V> prev = table[i];
+        Entry<K,V> e = prev;
+
+        while (e != null) {
+            Entry<K,V> next = e.next;
+            Object k;
+            if (e.hash == hash &&
+                ((k = e.key) == key || (key != null && key.equals(k)))) {
+                modCount++;
+                size--;
+                if (prev == e)
+                    table[i] = next;
+                else
+                    prev.next = next;
+                e.recordRemoval(this);
+                return e;
+            }
+            prev = e;
+            e = next;
+        }
+
+        return e;
+    }
     
+    //使用Map.Entry.equals()匹配的移除键-值对的特别版
+    final Entry<K,V> removeMapping(Object o) {
+        if (size == 0 || !(o instanceof Map.Entry))
+            return null;
+
+        Map.Entry<K,V> entry = (Map.Entry<K,V>) o;
+        Object key = entry.getKey();
+        int hash = (key == null) ? 0 : hash(key);
+        int i = indexFor(hash, table.length);
+        Entry<K,V> prev = table[i];
+        Entry<K,V> e = prev;
+
+        while (e != null) {
+            Entry<K,V> next = e.next;
+            if (e.hash == hash && e.equals(entry)) {
+                modCount++;
+                size--;
+                if (prev == e)
+                    table[i] = next;
+                else
+                    prev.next = next;
+                e.recordRemoval(this);
+                return e;
+            }
+            prev = e;
+            e = next;
+        }
+
+        return e;
+    }
+    
+    //从此映射中移除所有映射关系。此调用返回后，映射将为空
+    public void clear() {
+        modCount++;
+        Arrays.fill(table, null);
+        size = 0;
+    }
+    
+    //如果此映射将一个或多个键映射到指定值，则返回true
+    public boolean containsValue(Object value) {
+        if (value == null)
+            return containsNullValue();
+
+        Entry[] tab = table;
+        for (int i = 0; i < tab.length ; i++)
+            for (Entry e = tab[i] ; e != null ; e = e.next)
+                if (value.equals(e.value))
+                    return true;
+        return false;
+    }
+    //参数为空的containsValue特例版
+    private boolean containsNullValue() {
+        Entry[] tab = table;
+        for (int i = 0; i < tab.length ; i++)
+            for (Entry e = tab[i] ; e != null ; e = e.next)
+                if (e.value == null)
+                    return true;
+        return false;
+    }
+    
+    //返回此HashMap实例的浅副本：并不复制键和值本身
+    public Object clone() {
+        HashMap<K,V> result = null;
+        try {
+            result = (HashMap<K,V>)super.clone();
+        } catch (CloneNotSupportedException e) { 
+            // assert false;
+        }
+        if (result.table != EMPTY_TABLE) {
+            result.inflateTable(Math.min(
+                (int) Math.min(size * Math.min(1 / loadFactor, 4.0f), 
+                HashMap.MAXIMUM_CAPACITY), table.length));
+        }
+        result.entrySet = null;
+        result.modCount = 0;
+        result.size = 0;
+        result.init();
+        result.putAllForCreate(this);
+
+        return result;
+    }
+    
+    static class Entry<K,V> implements Map.Entry<K,V> {...}
+    
+    //将带有指定键、值和哈希码的新条目添加到指定的桶中。该方法会适时调整表的大小。
+    void addEntry(int hash, K key, V value, int bucketIndex) {
+        if ((size >= threshold) && (null != table[bucketIndex])) {
+            resize(2 * table.length);
+            hash = (null != key) ? hash(key) : 0;
+            bucketIndex = indexFor(hash, table.length);
+        }
+
+        createEntry(hash, key, value, bucketIndex);
+    }
+    
+    //类似addEntry，创建一个新条目
+    void createEntry(int hash, K key, V value, int bucketIndex) {
+        Entry<K,V> e = table[bucketIndex];
+        table[bucketIndex] = new Entry<>(hash, key, value, e);
+        size++;
+    }
+    
+    private abstract class HashIterator<E> implements Iterator<E> {...}
+    private final class ValueIterator extends HashIterator<V> {...}
+    private final class KeyIterator extends HashIterator<K> {...}
+    private final class EntryIterator extends HashIterator<Map.Entry<K,V>> {...}
+    
+    //子类重写这些迭代方法
+    Iterator<K> newKeyIterator() {...}
+    Iterator<V> newValueIterator() {...}
+    Iterator<Map.Entry<K,V>> newEntryIterator() {...}
+    //视图
+    private transient Set<Map.Entry<K,V>> entrySet = null;
+    
+    //返回此映射中所包含的键的 Set 视图。
+    //该 set 受映射的支持，所以对映射的更改将反映在该 set 中，反之亦然。
+    //如果在对set进行迭代的同时修改了映射（通过迭代器自己的remove操作除外），则迭代结果是不确定的。
+    //该 set 支持元素的移除，通过 Iterator.remove、 Set.remove、 removeAll、 
+    //retainAll 和 clear 操作可从该映射中移除相应的映射关系。它不支持 add 或 addAll 操作。
+    public Set<K> keySet() {
+        Set<K> ks = keySet;
+        return (ks != null ? ks : (keySet = new KeySet()));
+    }
+    private final class KeySet extends AbstractSet<K> {...}
+    
+    //返回此映射所包含的值的 Collection 视图。
+    //该 collection 受映射的支持，所以对映射的更改将反映在该 collection 中，反之亦然。
+    //如果在对collection进行迭代的同时修改了映射（通过迭代器自己的remove操作除外），则迭代结果是不确定的
+    //该 collection 支持元素的移除，通过 Iterator.remove、 Collection.remove、 removeAll、 
+    //retainAll 和 clear 操作可从该映射中移除相应的映射关系。它不支持 add 或 addAll 操作。
+    public Collection<V> values() {
+        Collection<V> vs = values;
+        return (vs != null ? vs : (values = new Values()));
+    }
+    private final class Values extends AbstractCollection<V> {...}
+    
+    //返回此映射所包含的映射关系的 Set 视图。 
+    //该 set 受映射支持，所以对映射的更改将反映在此 set 中，反之亦然。
+    //如果在对 set 进行迭代的同时修改了映射（通过迭代器自己的remove操作，
+    //或者通过在该迭代器返回的映射项上执行 setValue 操作除外），则迭代结果是不确定的。
+    //该 set 支持元素的移除，通过 Iterator.remove、 Set.remove、 removeAll、 
+    // retainAll 和 clear 操作可从该映射中移除相应的映射关系。它不支持 add 或 addAll 操作。
+    public Set<Map.Entry<K,V>> entrySet() {
+        return entrySet0();
+    }
+    private Set<Map.Entry<K,V>> entrySet0() {
+        Set<Map.Entry<K,V>> es = entrySet;
+        return es != null ? es : (entrySet = new EntrySet());
+    }
+    private final class EntrySet extends AbstractSet<Map.Entry<K,V>> {...}
+    
+    //序列化和反序列化
+    private void writeObject(java.io.ObjectOutputStream s)
+        throws IOException {...}
+    private static final long serialVersionUID = 362498820763181265L;
+    private void readObject(java.io.ObjectInputStream s)
+         throws IOException, ClassNotFoundException {...}
+    int   capacity()     { return table.length; }
+    float loadFactor()   { return loadFactor;   }
   }
 ```
