@@ -1,7 +1,7 @@
 * HashMap类的源码(JDK1.7)解读, 由于本人水平有限, 如有纰漏之处, 烦请留言指正. (Email: wp571988@163.com)       
   &nbsp;&nbsp; 基于哈希表的 Map 接口的实现。此实现提供所有可选的映射操作，并允许使用 null 值和 null 键。（除了非同步和允许使用 null 之外，HashMap 类与 Hashtable 大致相同）此类不保证映射的顺序，特别是它不保证该顺序恒久不变。
   &nbsp;&nbsp; HashMap的存储结构图如下：
-  <p><img src="http://images.cnblogs.com/cnblogs_com/wp5719/831982/o_Collections.png" /></p>
+  <p><img src="http://images.cnblogs.com/cnblogs_com/wp5719/831982/o_hashmap.JPG" /></p>
   
   &nbsp;&nbsp; 此实现假定哈希函数将元素适当地分布在各桶之间，可为基本操作（get 和 put）提供稳定的性能。迭代 collection 视图所需的时间与 HashMap 实例的“容量”（桶的数量）及其大小（键-值映射关系数）成比例。所以，如果迭代性能很重要，则不要将初始容量设置得太高（或将加载因子设置得太低）。
 
