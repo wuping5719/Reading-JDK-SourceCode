@@ -31,7 +31,167 @@
     implements Map<K,V> {
     private static final long serialVersionUID = 3801124242820219131L;
     
-    //
+    //双链表的头结点
     private transient Entry<K,V> header;
+    
+    //迭代排序模式：true，实际存储顺序；false，插入顺序。
+    private final boolean accessOrder;
+    
+    //构造一个带指定初始容量和加载因子的空插入顺序LinkedHashMap实例。
+    public LinkedHashMap(int initialCapacity, float loadFactor) {
+        super(initialCapacity, loadFactor);
+        accessOrder = false;
+    }
+    
+    //构造一个带指定初始容量和默认加载因子(0.75)的空插入顺序LinkedHashMap实例。
+    public LinkedHashMap(int initialCapacity) {
+        super(initialCapacity);
+        accessOrder = false;
+    }
+    
+    //构造一个带默认初始容量(16)和加载因子(0.75)的空插入顺序LinkedHashMap实例。
+    public LinkedHashMap() {
+        super();
+        accessOrder = false;
+    }
+    
+    //构造一个映射关系与指定映射相同的插入顺序LinkedHashMap实例。
+    //所创建的LinkedHashMap实例具有默认的加载因子(0.75)和足以容纳指定映射中映射关系的初始容量。
+    public LinkedHashMap(Map<? extends K, ? extends V> m) {
+        super(m);
+        accessOrder = false;
+    }
+    
+    //构造一个带指定初始容量、加载因子和排序模式的空LinkedHashMap实例。
+    public LinkedHashMap(int initialCapacity, float loadFactor, boolean accessOrder) {
+        super(initialCapacity, loadFactor);
+        this.accessOrder = accessOrder;
+    }
+    
+    //在插入元素前初始化双链表
+    @Override
+    void init() {
+        header = new Entry<>(-1, null, null, null);
+        header.before = header.after = header;
+    }
+    
+    //rehash，将所有条目转移到新的表数组，超类调整，为了更快的迭代链表，以提升性能.
+    @Override
+    void transfer(HashMap.Entry[] newTable, boolean rehash) {
+        int newCapacity = newTable.length;
+        for (Entry<K,V> e = header.after; e != header; e = e.after) {
+            if (rehash)
+                e.hash = (e.key == null) ? 0 : hash(e.key);
+            int index = indexFor(e.hash, newCapacity);
+            e.next = newTable[index];
+            newTable[index] = e;
+        }
+    }
+    
+    //如果此映射将一个或多个键映射到指定值，则返回true。
+    public boolean containsValue(Object value) {
+        // 利用更快的迭代器
+        if (value==null) {
+            for (Entry e = header.after; e != header; e = e.after)
+                if (e.value==null)
+                    return true;
+        } else {
+            for (Entry e = header.after; e != header; e = e.after)
+                if (value.equals(e.value))
+                    return true;
+        }
+        return false;
+    }
+    
+    //返回此映射到指定键的值。如果此映射中没有该键的映射关系，则返回null 。
+    //更确切地讲，如果此映射包含满足(key==null ? k==null : key.equals(k))的从键k到值v的映射关系，
+    //则此方法返回v；否则，返回 null。（最多只能有一个这样的映射关系。）
+    //返回 null 值并不一定表明此映射不包含该键的映射关系；
+    //也可能此映射将该键显式地映射为 null。可使用 containsKey 操作来区分这两种情况。
+    public V get(Object key) {
+        Entry<K,V> e = (Entry<K,V>)getEntry(key);
+        if (e == null)
+            return null;
+        e.recordAccess(this);
+        return e.value;
+    }
+    
+    //从该映射中移除所有映射关系。此调用返回后映射将为空。
+    public void clear() {
+        super.clear();
+        header.before = header.after = header;
+    }
+    
+    private static class Entry<K,V> extends HashMap.Entry<K,V> {
+        // 用于迭代双链接列表的字段
+        Entry<K,V> before, after;
+
+        Entry(int hash, K key, V value, HashMap.Entry<K,V> next) {
+            super(hash, key, value, next);
+        }
+
+        //从链接列表中删除此项
+        private void remove() {
+            before.after = after;
+            after.before = before;
+        }
+
+        // 在列表中指定的现有条目之前插入此项
+        private void addBefore(Entry<K,V> existingEntry) {
+            after  = existingEntry;
+            before = existingEntry.before;
+            before.after = this;
+            after.before = this;
+        }
+
+        void recordAccess(HashMap<K,V> m) {
+            LinkedHashMap<K,V> lm = (LinkedHashMap<K,V>)m;
+            if (lm.accessOrder) {
+                lm.modCount++;
+                remove();
+                addBefore(lm.header);
+            }
+        }
+
+        void recordRemoval(HashMap<K,V> m) {
+            remove();
+        }
+    }
+    
+    private abstract class LinkedHashIterator<T> implements Iterator<T> {...}
+    private class KeyIterator extends LinkedHashIterator<K> {...}
+    private class ValueIterator extends LinkedHashIterator<V> {...}
+    private class EntryIterator extends LinkedHashIterator<Map.Entry<K,V>> {...}
+    
+    Iterator<K> newKeyIterator() {...}
+    Iterator<V> newValueIterator() {...}
+    Iterator<Map.Entry<K,V>> newEntryIterator() {...}
+    
+    //它会导致新分配的条目插入链接列表的结尾，并在合适时删除最旧的条目。
+    void addEntry(int hash, K key, V value, int bucketIndex) {
+        super.addEntry(hash, key, value, bucketIndex);
+
+        Entry<K,V> eldest = header.after;
+        if (removeEldestEntry(eldest)) {
+            removeEntryForKey(eldest.key);
+        }
+    }
+    
+    //不同于addEntry方法，它不调整表或删除最旧的条目。
+    void createEntry(int hash, K key, V value, int bucketIndex) {
+        HashMap.Entry<K,V> old = table[bucketIndex];
+        Entry<K,V> e = new Entry<>(hash, key, value, old);
+        table[bucketIndex] = e;
+        e.addBefore(header);
+        size++;
+    }
+    
+    //在将新条目插入到映射后， put 和 putAll 将调用此方法。
+    //此方法可以提供在每次添加新条目时移除最旧条目的实现程序。
+    //如果映射表示缓存，则此方法非常有用：它允许映射通过删除旧条目来减少内存损耗。
+    //此方法始终返回false
+    protected boolean removeEldestEntry(Map.Entry<K,V> eldest) {
+        return false;
+    }
   }
 ```
