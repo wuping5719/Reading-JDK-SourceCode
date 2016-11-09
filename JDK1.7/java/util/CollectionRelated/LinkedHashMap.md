@@ -1,6 +1,6 @@
 * LinkedHashMap类的源码(JDK1.7)解读, 由于本人水平有限, 如有纰漏之处, 烦请留言指正. (Email: wp571988@163.com)   
-   &nbsp;&nbsp; Map 接口的哈希表和链接列表实现，具有可预知的迭代顺序。此实现与 HashMap 的不同之处在于，后者维护着一个运行于所有条目的双重链接列表。此链接列表定义了迭代顺序，该迭代顺序通常就是将键插入到映射中的顺序（插入顺序）。注意：如果在映射中重新插入键，则插入顺序不受影响（如果在调用 m.put(k, v) 前 m.containsKey(k) 返回了 true，则调用时会将键 k 重新插入到映射 m 中）
-   LinkedHashMap原理图：<http://www.cnblogs.com/chenpi/p/5294077.html>
+   &nbsp;&nbsp; Map 接口的哈希表和链接列表实现，具有可预知的迭代顺序。此实现与 HashMap 的不同之处在于，后者维护着一个运行于所有条目的双重链接列表。此链接列表定义了迭代顺序，该迭代顺序通常就是将键插入到映射中的顺序（插入顺序）。注意：如果在映射中重新插入键，则插入顺序不受影响（如果在调用 m.put(k, v) 前 m.containsKey(k) 返回了 true，则调用时会将键 k 重新插入到映射 m 中）    
+   LinkedHashMap原理图：<http://www.cnblogs.com/chenpi/p/5294077.html>
    <p><img src="http://images.cnblogs.com/cnblogs_com/wp5719/831982/o_LinkedHashMap.jpg" /></p>
    <p><img src="http://images.cnblogs.com/cnblogs_com/wp5719/831982/o_LinkedHashMap2.jpg" /></p>
    
