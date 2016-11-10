@@ -45,7 +45,109 @@
     //加载因子
     private float loadFactor;
     
-    //
+    //哈希表已被结构性修改(改变哈希表项目数或其他内部结构修改)的次数，用于迭代哈希表时快速失败
     private transient int modCount = 0;
+    
+    private static final long serialVersionUID = 1421746759512286392L;
+    
+    //用于字符串键的map容量的默认阈值。替代散列降低由于计算字符串键弱哈希码的产生碰撞的几率
+    static final int ALTERNATIVE_HASHING_THRESHOLD_DEFAULT = Integer.MAX_VALUE;
+    
+    //在虚拟机启动之后才能初始化该值
+    private static class Holder {
+        static final int ALTERNATIVE_HASHING_THRESHOLD;
+
+        static {
+            String altThreshold = java.security.AccessController.doPrivileged(
+                new sun.security.action.GetPropertyAction("jdk.map.althashing.threshold"));
+
+            int threshold;
+            try {
+                threshold = (null != altThreshold) 
+                   ? Integer.parseInt(altThreshold) : ALTERNATIVE_HASHING_THRESHOLD_DEFAULT;
+                        
+                // disable alternative hashing if -1
+                if (threshold == -1) {
+                    threshold = Integer.MAX_VALUE;
+                }
+
+                if (threshold < 0) {
+                    throw new IllegalArgumentException("value must be positive integer.");
+                }
+            } catch(IllegalArgumentException failed) {
+                throw new Error("Illegal value for 'jdk.map.althashing.threshold'", failed);
+            }
+
+            ALTERNATIVE_HASHING_THRESHOLD = threshold;
+        }
+    }
+    
+    //哈希种子
+    transient int hashSeed;
+    
+    //初始化哈希码
+    final boolean initHashSeedAsNeeded(int capacity) {
+        boolean currentAltHashing = hashSeed != 0;
+        boolean useAltHashing = sun.misc.VM.isBooted() &&
+                (capacity >= Holder.ALTERNATIVE_HASHING_THRESHOLD);
+        boolean switching = currentAltHashing ^ useAltHashing;
+        if (switching) {
+            hashSeed = useAltHashing ? sun.misc.Hashing.randomHashSeed(this) : 0;
+        }
+        return switching;
+    }
+    
+    private int hash(Object k) {
+        // 如果禁用替代散列，哈希种子hashSeed为0
+        return hashSeed ^ k.hashCode();
+    }
+    
+    //用指定初始容量和指定加载因子构造一个新的空哈希表
+    public Hashtable(int initialCapacity, float loadFactor) {
+        if (initialCapacity < 0)
+            throw new IllegalArgumentException("Illegal Capacity: "+ initialCapacity);
+        if (loadFactor <= 0 || Float.isNaN(loadFactor))
+            throw new IllegalArgumentException("Illegal Load: "+loadFactor);
+
+        if (initialCapacity==0)
+            initialCapacity = 1;
+        this.loadFactor = loadFactor;
+        table = new Entry[initialCapacity];
+        threshold = (int)Math.min(initialCapacity * loadFactor, MAX_ARRAY_SIZE + 1);
+        initHashSeedAsNeeded(initialCapacity);
+    }
+    
+    //用指定初始容量和默认的加载因子(0.75)构造一个新的空哈希表
+    public Hashtable(int initialCapacity) {
+        this(initialCapacity, 0.75f);
+    }
+    
+    //用默认的初始容量(11)和加载因子(0.75)构造一个新的空哈希表
+    public Hashtable() {
+        this(11, 0.75f);
+    }
+    
+    //构造一个与给定的 Map 具有相同映射关系的新哈希表。
+    //该哈希表是用足以容纳给定 Map 中映射关系的初始容量和默认的加载因子(0.75)创建的。
+    public Hashtable(Map<? extends K, ? extends V> t) {
+        this(Math.max(2*t.size(), 11), 0.75f);
+        putAll(t);
+    }
+    
+    //返回此哈希表中的键的数量。
+    public synchronized int size() {
+        return count;
+    }
+    
+    //测试此哈希表是否没有键映射到值。
+    public synchronized boolean isEmpty() {
+        return count == 0;
+    }
+    
+    //
+    public synchronized Enumeration<K> keys() {
+        return this.<K>getEnumeration(KEYS);
+    }
+    
   }
 ```
