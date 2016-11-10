@@ -39,5 +39,13 @@
     //哈希表中的条目总数
     private transient int count;
     
+    //阈值：哈希表大小超过此阈值时 rehash (int)(初始容量 * 加载因子)
+    private int threshold;
+    
+    //加载因子
+    private float loadFactor;
+    
+    //
+    private transient int modCount = 0;
   }
 ```
