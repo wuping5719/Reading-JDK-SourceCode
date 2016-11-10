@@ -139,15 +139,398 @@
         return count;
     }
     
-    //测试此哈希表是否没有键映射到值。
+    //测试此哈希表是否没有键映射到值(是否为空)。
     public synchronized boolean isEmpty() {
         return count == 0;
     }
     
-    //
+    //返回哈希表中键的Enumeration枚举
     public synchronized Enumeration<K> keys() {
         return this.<K>getEnumeration(KEYS);
     }
+    
+    //返回哈希表中值的枚举
+    //使用返回对象上的枚举方法，依次提取元素。
+    public synchronized Enumeration<V> elements() {
+        return this.<V>getEnumeration(VALUES);
+    }
+    
+    //测试此映射表中是否存在与指定值关联的键。此操作比 containsKey 方法的开销更大。
+    //注意：此方法在功能上等同于containsValue方法，containValue是collection框架中Map接口的一部分
+    public synchronized boolean contains(Object value) {
+        if (value == null) {
+            throw new NullPointerException();
+        }
+
+        Entry tab[] = table;
+        for (int i = tab.length ; i-- > 0 ;) {
+            for (Entry<K,V> e = tab[i] ; e != null ; e = e.next) {
+                if (e.value.equals(value)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
+    //如果此 Hashtable 将一个或多个键映射到此值，则返回 true。
+    //注意：此方法在功能上等同于contains（它先于 Map 接口）。
+    public boolean containsValue(Object value) {
+        return contains(value);
+    }
+    
+    //测试指定对象是否为此哈希表中的键。
+    public synchronized boolean containsKey(Object key) {
+        Entry tab[] = table;
+        int hash = hash(key);
+        int index = (hash & 0x7FFFFFFF) % tab.length;
+        for (Entry<K,V> e = tab[index] ; e != null ; e = e.next) {
+            if ((e.hash == hash) && e.key.equals(key)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    //返回指定键所映射到的值，如果此映射不包含此键的映射，则返回 null.
+    //更确切地讲，如果此映射包含满足 (key.equals(k)) 的从键 k 到值 v 的映射，则此方法返回 v；
+    //否则，返回 null。（最多只能有一个这样的映射。）
+    public synchronized V get(Object key) {
+        Entry tab[] = table;
+        int hash = hash(key);
+        int index = (hash & 0x7FFFFFFF) % tab.length;
+        for (Entry<K,V> e = tab[index] ; e != null ; e = e.next) {
+            if ((e.hash == hash) && e.key.equals(key)) {
+                return e.value;
+            }
+        }
+        return null;
+    }
+    
+    //可分配的最大数组大小
+    private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
+    
+    //增加此哈希表的容量并在内部对其进行重组，以便更有效地容纳和访问其元素。
+    //当哈希表中的键的数量超出哈希表的容量和加载因子时，自动调用此方法。
+    protected void rehash() {
+        int oldCapacity = table.length;
+        Entry<K,V>[] oldMap = table;
+
+        int newCapacity = (oldCapacity << 1) + 1;
+        if (newCapacity - MAX_ARRAY_SIZE > 0) {
+            if (oldCapacity == MAX_ARRAY_SIZE)
+                // 确保最大尺寸的桶运行
+                return;
+            newCapacity = MAX_ARRAY_SIZE;
+        }
+        Entry<K,V>[] newMap = new Entry[newCapacity];
+
+        modCount++;
+        threshold = (int)Math.min(newCapacity * loadFactor, MAX_ARRAY_SIZE + 1);
+        boolean rehash = initHashSeedAsNeeded(newCapacity);
+
+        table = newMap;
+
+        for (int i = oldCapacity ; i-- > 0 ;) {
+            for (Entry<K,V> old = oldMap[i] ; old != null ; ) {
+                Entry<K,V> e = old;
+                old = old.next;
+
+                if (rehash) {
+                    e.hash = hash(e.key);
+                }
+                int index = (e.hash & 0x7FFFFFFF) % newCapacity;
+                e.next = newMap[index];
+                newMap[index] = e;
+            }
+        }
+    }
+    
+    //将指定 key 映射到此哈希表中的指定 value。键和值都不可以为 null。
+    //通过使用与原来的键相同的键调用 get 方法，可以获取相应的值。
+    public synchronized V put(K key, V value) {
+        // 确保值不为空
+        if (value == null) {
+            throw new NullPointerException();
+        }
+
+        // 确保键不在哈希表中
+        Entry tab[] = table;
+        int hash = hash(key);
+        int index = (hash & 0x7FFFFFFF) % tab.length;
+        for (Entry<K,V> e = tab[index] ; e != null ; e = e.next) {
+            if ((e.hash == hash) && e.key.equals(key)) {
+                V old = e.value;
+                e.value = value;
+                return old;
+            }
+        }
+
+        modCount++;
+        if (count >= threshold) {
+            // 超过阈值Rehash
+            rehash();
+
+            tab = table;
+            hash = hash(key);
+            index = (hash & 0x7FFFFFFF) % tab.length;
+        }
+
+        // 创建新条目
+        Entry<K,V> e = tab[index];
+        tab[index] = new Entry<>(hash, key, value, e);
+        count++;
+        return null;
+    }
+    
+    //从哈希表中移除该键及其相应的值。如果该键不在哈希表中，则此方法不执行任何操作。
+    public synchronized V remove(Object key) {
+        Entry tab[] = table;
+        int hash = hash(key);
+        int index = (hash & 0x7FFFFFFF) % tab.length;
+        for (Entry<K,V> e = tab[index], prev = null ; e != null ; prev = e, e = e.next) {
+            if ((e.hash == hash) && e.key.equals(key)) {
+                modCount++;
+                if (prev != null) {
+                    prev.next = e.next;
+                } else {
+                    tab[index] = e.next;
+                }
+                count--;
+                V oldValue = e.value;
+                e.value = null;
+                return oldValue;
+            }
+        }
+        return null;
+    }
+    
+    //将指定映射的所有映射关系复制到此哈希表中，这些映射关系将替换此哈希表拥有的、
+    //针对当前指定映射中所有键的所有映射关系。
+    public synchronized void putAll(Map<? extends K, ? extends V> t) {
+        for (Map.Entry<? extends K, ? extends V> e : t.entrySet())
+            put(e.getKey(), e.getValue());
+    }
+    
+    //将此哈希表清空，使其不包含任何键。
+    public synchronized void clear() {
+        Entry tab[] = table;
+        modCount++;
+        for (int index = tab.length; --index >= 0; )
+            tab[index] = null;
+        count = 0;
+    }
+    
+    //创建此哈希表的浅副本。
+    //复制哈希表自身的所有结构，但不复制它的键和值。这是一个开销相对较大的操作。
+    public synchronized Object clone() {
+        try {
+            Hashtable<K,V> t = (Hashtable<K,V>) super.clone();
+            t.table = new Entry[table.length];
+            for (int i = table.length ; i-- > 0 ; ) {
+                t.table[i] = (table[i] != null)
+                    ? (Entry<K,V>) table[i].clone() : null;
+            }
+            t.keySet = null;
+            t.entrySet = null;
+            t.values = null;
+            t.modCount = 0;
+            return t;
+        } catch (CloneNotSupportedException e) {
+            throw new InternalError();
+        }
+    }
+    
+    //返回此Hashtable对象的字符串表示形式，其形式为ASCII字符","(逗号加空格)分隔开的、括在括号中的一组条目。
+    //每个条目都按以下方式呈现：键，一个等号 = 和相关元素，其中 toString 方法用于将键和元素转换为字符串。
+    public synchronized String toString() {
+        int max = size() - 1;
+        if (max == -1)
+            return "{}";
+
+        StringBuilder sb = new StringBuilder();
+        Iterator<Map.Entry<K,V>> it = entrySet().iterator();
+
+        sb.append('{');
+        for (int i = 0; ; i++) {
+            Map.Entry<K,V> e = it.next();
+            K key = e.getKey();
+            V value = e.getValue();
+            sb.append(key   == this ? "(this Map)" : key.toString());
+            sb.append('=');
+            sb.append(value == this ? "(this Map)" : value.toString());
+
+            if (i == max)
+                return sb.append('}').toString();
+            sb.append(", ");
+        }
+    }
+    
+    private <T> Enumeration<T> getEnumeration(int type) {
+        if (count == 0) {
+            return Collections.emptyEnumeration();
+        } else {
+            return new Enumerator<>(type, false);
+        }
+    }
+
+    private <T> Iterator<T> getIterator(int type) {
+        if (count == 0) {
+            return Collections.emptyIterator();
+        } else {
+            return new Enumerator<>(type, true);
+        }
+    }
+    
+    //视图
+    private transient volatile Set<K> keySet = null;
+    private transient volatile Set<Map.Entry<K,V>> entrySet = null;
+    private transient volatile Collection<V> values = null;
+    
+    //返回哈希表的键视图
+    public Set<K> keySet() {
+        if (keySet == null)
+            keySet = Collections.synchronizedSet(new KeySet(), this);
+        return keySet;
+    }
+    private class KeySet extends AbstractSet<K> {...}
+    
+    //返回哈希表的键值对视图
+    public Set<Map.Entry<K,V>> entrySet() {
+        if (entrySet==null)
+            entrySet = Collections.synchronizedSet(new EntrySet(), this);
+        return entrySet;
+    }
+    private class EntrySet extends AbstractSet<Map.Entry<K,V>> {...}
+    
+    //返回哈希表的值视图
+    public Collection<V> values() {
+        if (values==null)
+            values = Collections.synchronizedCollection(new ValueCollection(), this);
+        return values;
+    }
+    private class ValueCollection extends AbstractCollection<V> {...}
+    
+    //按照 Map 接口的定义，比较指定 Object 与此 Map 是否相等
+    public synchronized boolean equals(Object o) {
+        if (o == this)
+            return true;
+
+        if (!(o instanceof Map))
+            return false;
+        Map<K,V> t = (Map<K,V>) o;
+        if (t.size() != size())
+            return false;
+
+        try {
+            Iterator<Map.Entry<K,V>> i = entrySet().iterator();
+            while (i.hasNext()) {
+                Map.Entry<K,V> e = i.next();
+                K key = e.getKey();
+                V value = e.getValue();
+                if (value == null) {
+                    if (!(t.get(key)==null && t.containsKey(key)))
+                        return false;
+                } else {
+                    if (!value.equals(t.get(key)))
+                        return false;
+                }
+            }
+        } catch (ClassCastException unused)   {
+            return false;
+        } catch (NullPointerException unused) {
+            return false;
+        }
+
+        return true;
+    }
+    
+    //按照 Map 接口的定义，返回此 Map 的哈希码值
+    //负加载因子表明: 哈希代码计算正在进行中。
+    public synchronized int hashCode() {
+        int h = 0;
+        if (count == 0 || loadFactor < 0)
+            return h;  // 返回0
+
+        loadFactor = -loadFactor;  // 哈希码计算进行中
+        Entry[] tab = table;
+        for (Entry<K,V> entry : tab)
+            while (entry != null) {
+                h += entry.hashCode();
+                entry = entry.next;
+            }
+        loadFactor = -loadFactor;  // 哈希码计算完成
+
+        return h;
+    }
+    
+    private void writeObject(java.io.ObjectOutputStream s)
+            throws IOException {...}
+    private void readObject(java.io.ObjectInputStream s)
+         throws IOException, ClassNotFoundException {...}
+    
+    //被readObject方法调用
+    private void reconstitutionPut(Entry<K,V>[] tab, K key, V value)
+        throws StreamCorruptedException {...}
+    
+    //哈希桶碰撞列表条目
+    private static class Entry<K,V> implements Map.Entry<K,V> {
+        int hash;
+        final K key;
+        V value;
+        Entry<K,V> next;
+
+        protected Entry(int hash, K key, V value, Entry<K,V> next) {
+            this.hash = hash;
+            this.key =  key;
+            this.value = value;
+            this.next = next;
+        }
+
+        protected Object clone() {
+            return new Entry<>(hash, key, value, (next==null ? null : (Entry<K,V>) next.clone()));
+        }
+
+        public K getKey() {
+            return key;
+        }
+
+        public V getValue() {
+            return value;
+        }
+
+        public V setValue(V value) {
+            if (value == null)
+                throw new NullPointerException();
+
+            V oldValue = this.value;
+            this.value = value;
+            return oldValue;
+        }
+
+        public boolean equals(Object o) {
+            if (!(o instanceof Map.Entry))
+                return false;
+            Map.Entry<?,?> e = (Map.Entry)o;
+
+            return key.equals(e.getKey()) && value.equals(e.getValue());
+        }
+
+        public int hashCode() {
+            return (Objects.hashCode(key) ^ Objects.hashCode(value));
+        }
+
+        public String toString() {
+            return key.toString()+"="+value.toString();
+        }
+    }
+    
+    //枚举/迭代类型
+    private static final int KEYS = 0;
+    private static final int VALUES = 1;
+    private static final int ENTRIES = 2;
+    
+    private class Enumerator<T> implements Enumeration<T>, Iterator<T> {...}
     
   }
 ```
