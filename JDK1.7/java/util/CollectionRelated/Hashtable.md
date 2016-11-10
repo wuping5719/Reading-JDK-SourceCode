@@ -9,12 +9,14 @@
   
   &nbsp;&nbsp; 初始容量主要控制空间消耗与执行 rehash 操作所需要的时间损耗之间的平衡。如果初始容量大于 Hashtable 所包含的最大条目数除以加载因子，则永远不会发生 rehash 操作。但是，将初始容量设置太高可能会浪费空间。
   
-  &nbsp;&nbsp; 如果很多条目要存储在一个 Hashtable 中，那么与根据需要执行自动 rehashing 操作来增大表的容量的做法相比，使用足够大的初始容量创建哈希表或许可以更有效地插入条目。           
+  &nbsp;&nbsp; 如果很多条目要存储在一个 Hashtable 中，那么与根据需要执行自动 rehashing 操作来增大表的容量的做法相比，使用足够大的初始容量创建哈希表或许可以更有效地插入条目。
+  
   &nbsp;&nbsp; 下面这个示例创建了一个数字的哈希表。它将数字的名称用作键：      
   &nbsp;&nbsp;&nbsp;&nbsp; Hashtable<String, Integer> numbers = new Hashtable<String, Integer>();      
   &nbsp;&nbsp;&nbsp;&nbsp; numbers.put("one", 1);       
   &nbsp;&nbsp;&nbsp;&nbsp; numbers.put("two", 2);     
-  &nbsp;&nbsp;&nbsp;&nbsp; numbers.put("three", 3);      
+  &nbsp;&nbsp;&nbsp;&nbsp; numbers.put("three", 3);   
+  
   &nbsp;&nbsp; 要获取一个数字，可以使用以下代码：     
   &nbsp;&nbsp;&nbsp;&nbsp; Integer n = numbers.get("two");     
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (n != null) {       
