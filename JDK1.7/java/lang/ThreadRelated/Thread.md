@@ -6,8 +6,8 @@
   &nbsp;&nbsp; 当 Java 虚拟机启动时，通常都会有单个非守护线程（它通常会调用某个指定类的 main 方法）。Java 虚拟机会继续执行线程，直到下列任一情况出现时为止：  
   &nbsp;&nbsp; 1.调用了 Runtime 类的 exit 方法，并且安全管理器允许退出操作发生。         
   &nbsp;&nbsp; 2.非守护线程的所有线程都已停止运行，无论是通过从对 run 方法的调用中返回，还是通过抛出一个传播到 run 方法之外的异常。
+
   &nbsp;&nbsp; 创建新执行线程有两种方法。一种方法是将类声明为 Thread 的子类。该子类应重写 Thread 类的 run 方法。接下来可以分配并启动该子类的实例。例如，计算大于某一规定值的质数的线程可以写成：
-  
 ```java
   class PrimeThread extends Thread {
          long minPrime;
@@ -21,9 +21,7 @@
          }
   }
 ```  
-  
  &nbsp;&nbsp;  然后，下列代码会创建并启动一个线程：
-  
 ```java
   class PrimeRun implements Runnable {
          long minPrime;
@@ -37,13 +35,11 @@
          }
      }
 ```    
-     
   &nbsp;&nbsp; 创建线程的另一种方法是声明实现 Runnable 接口的类。该类然后实现 run 方法。然后可以分配该类的实例，在创建 Thread 时作为一个参数来传递并启动。采用这种风格的同一个例子如下所示：
 ```java
   PrimeThread p = new PrimeThread(143);
   p.start();
 ```       
-    
   &nbsp;&nbsp; 然后，下列代码会创建并启动一个线程：
 ```java
   PrimeRun p = new PrimeRun(143);
