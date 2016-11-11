@@ -9,5 +9,9 @@
   &nbsp;&nbsp; 此外，Runnable 为非 Thread 子类的类提供了一种激活方式。通过实例化某个 Thread 实例并将自身作为运行目标，就可以运行实现 Runnable 的类而无需创建 Thread 的子类。大多数情况下，如果只想重写 run() 方法，而不重写其他 Thread 方法，那么应使用 Runnable 接口。这很重要，因为除非程序员打算修改或增强类的基本行为，否则不应为该类创建子类。
   
 ```java
-  
+  public interface Runnable {
+     //使用实现接口 Runnable 的对象创建一个线程时，启动该线程将导致在独立执行的线程中调用对象的 run 方法。
+     //方法 run 的常规协定是，它可能执行任何所需的动作。
+     public abstract void run();
+  }
 ```
