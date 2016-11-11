@@ -26,6 +26,13 @@
  &nbsp;&nbsp;  然后，下列代码会创建并启动一个线程：
  
 ```java
+  PrimeThread p = new PrimeThread(143);
+  p.start();
+```    
+
+  &nbsp;&nbsp; 创建线程的另一种方法是声明实现 Runnable 接口的类。该类然后实现 run 方法。然后可以分配该类的实例，在创建 Thread 时作为一个参数来传递并启动。采用这种风格的同一个例子如下所示：
+  
+```java
   class PrimeRun implements Runnable {
          long minPrime;
          PrimeRun(long minPrime) {
@@ -37,13 +44,7 @@
              ...
          }
      }
-```    
-
-  &nbsp;&nbsp; 创建线程的另一种方法是声明实现 Runnable 接口的类。该类然后实现 run 方法。然后可以分配该类的实例，在创建 Thread 时作为一个参数来传递并启动。采用这种风格的同一个例子如下所示：
-  
-```java
-  PrimeThread p = new PrimeThread(143);
-  p.start();
+ 
 ```       
 
   &nbsp;&nbsp; 然后，下列代码会创建并启动一个线程：
