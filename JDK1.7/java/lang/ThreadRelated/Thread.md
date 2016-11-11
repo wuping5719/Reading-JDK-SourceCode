@@ -155,7 +155,114 @@
      //此操作受到系统计时器和调度程序精度和准确性的影响。该线程不丢失任何监视器的所属权。 
      public static native void sleep(long millis) throws InterruptedException;
      
-     //
-     
+     //在指定的毫秒数加指定的纳秒数内让当前正在执行的线程休眠（暂停执行），
+     //此操作受到系统计时器和调度程序精度和准确性的影响。该线程不丢失任何监视器的所属权。
+     public static void sleep(long millis, int nanos) throws InterruptedException {
+        if (millis < 0) {
+            throw new IllegalArgumentException("timeout value is negative");
+        }
+
+        if (nanos < 0 || nanos > 999999) {
+            throw new IllegalArgumentException("nanosecond timeout value out of range");
+        }
+
+        if (nanos >= 500000 || (nanos != 0 && millis == 0)) {
+            millis++;
+        }
+
+        sleep(millis);
+    }
+    
+    //用当前AccessControlContext初始化一个线程
+    private void init(ThreadGroup g, Runnable target, String name, long stackSize) {
+        init(g, target, name, stackSize, null);
+    }
+    
+    //Thread类中的init方法是Thread类中所有构造方法都调用的方法，用于初始化线程的各种信息
+    //把线程类的引用保存到target中。这样，当调用 Thread 的 run 方法时，target 就不为空了，
+    //而是继续调用了 target 的 run 方法，所以我们需要实现 Runnable 的 run 方法。
+    //这样通过 Thread 的 run 方法就调用到了 Runnable 实现类中的 run 方法。
+    //这也是 Runnable 接口实现的线程类需要这样启动的原因。
+    private void init(ThreadGroup g, Runnable target, String name,
+                      long stackSize, AccessControlContext acc) {
+        if (name == null) {
+            throw new NullPointerException("name cannot be null");
+        }
+
+        Thread parent = currentThread();   // 当先线程
+        //安全管理，查看线程拥有的功能（例如：读写文件，访问网络）。  
+        SecurityManager security = System.getSecurityManager();  
+        if (g == null) {
+            // 如果有一个安全管理器，那么询问安全管理器该做什么
+            if (security != null) {
+                g = security.getThreadGroup();
+            }
+
+            // 如果安全管理器没有强大的支持，那么就用调用当前线程的线程组
+            if (g == null) {
+                g = parent.getThreadGroup();
+            }
+        }
+        
+        g.checkAccess();   //确定当前运行的线程是否有权修改此线程组。   
+
+        // 我们有所需的权限吗？
+        if (security != null) {
+            //权限校验
+            if (isCCLOverridden(getClass())) {
+                security.checkPermission(SUBCLASS_IMPLEMENTATION_PERMISSION);
+            }
+        }
+
+        //记录一个线程到线程组里，好像只是取得一个线程号。其实就是一个计数器自增：nUnstartedThreads++
+        g.addUnstarted(); 
+
+        this.group = g;                    //初始化确定线程组
+        this.daemon = parent.isDaemon();   //初始化确定线程是否为守护线程  
+        this.priority = parent.getPriority();  //初始化确定线程的优先级  
+        this.name = name.toCharArray();   //初始化确定线程名字  
+        if (security == null || isCCLOverridden(parent.getClass()))  //初始化确定上下文的类加载器
+            this.contextClassLoader = parent.getContextClassLoader();
+        else
+            this.contextClassLoader = parent.contextClassLoader;   
+        //权限快照
+        this.inheritedAccessControlContext = acc != null ? acc : AccessController.getContext();
+        this.target = target;    //初始化确定目标Runnable对象，即具体执行哪个Runnable对象里的run方法的对象
+        setPriority(priority);   //初始化设置线程优先级
+        if (parent.inheritableThreadLocals != null)  //创建本地线程
+            this.inheritableThreadLocals = ThreadLocal.createInheritedMap(parent.inheritableThreadLocals);
+        this.stackSize = stackSize;   //初始化栈大小
+
+        tid = nextThreadID();   //初始化设置线程的ID
+    }
+    
+    //Thread不支持clone()，构建一个新的线程。
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        throw new CloneNotSupportedException();
+    }
+    
+    //分配新的 Thread 对象。
+    //这种构造方法与 Thread(null, null, gname ) 具有相同的作用，其中 gname 是一个新生成的名称。
+    //自动生成的名称的形式为 "Thread-"+ n，其中的 n 为整数。
+    public Thread() {
+        init(null, null, "Thread-" + nextThreadNum(), 0);
+    }
+    
+    //分配新的 Thread 对象。
+    //这种构造方法与 Thread(null, target, gname ) 具有相同的作用，其中的 gname 是一个新生成的名称。
+    //自动生成的名称的形式为 “Thread-”+ n，其中的 n 为整数。
+    public Thread(Runnable target) {
+        init(null, target, "Thread-" + nextThreadNum(), 0);
+    }
+    
+    //分配新的 Thread 对象。
+    //这种构造方法与 Thread(group, target, gname) 具有相同的作用，其中的 gname 是一个新生成的名称。
+    //自动生成的名称的形式为 "Thread-"+n ，其中的 n 为整数。 
+    Thread(Runnable target, AccessControlContext acc) {
+        init(null, target, "Thread-" + nextThreadNum(), 0, acc);
+    }
+    
+    //http://www.myexception.cn/program/1033904.html
   }
 ```
