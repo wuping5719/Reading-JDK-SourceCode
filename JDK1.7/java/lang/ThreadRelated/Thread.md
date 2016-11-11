@@ -57,5 +57,105 @@
   &nbsp;&nbsp; 每个线程都有一个标识名，多个线程可以同名。如果线程创建时没有指定标识名，就会为其生成一个新名称。
   
 ```java
-  
+  public class Thread implements Runnable {
+     //确保registerNatives是最先执行的
+     //这个方法及静态代码块在Object类中也存在，可以说是重写了Object类的registerNatives代码
+     private static native void registerNatives();
+     static {
+        registerNatives();
+     }
+     
+     private char        name[];      //线程名
+     private int         priority;    //线程优先级
+     private Thread      threadQ;
+     private long        eetop;       
+     
+     //Whether or not to single_step this thread.
+     private boolean     single_step;
+     
+     //标志本线程是否是一个守护线程
+     private boolean     daemon = false;
+     
+     //JVM状态
+     private boolean     stillborn = false;
+     
+     //哪个线程会被执行，调用run方法时run方法是哪个类里面的.
+     private Runnable target;
+     
+     //本线程所属线程组
+     private ThreadGroup group;
+     
+     //本线程的上下文类加载器
+     private ClassLoader contextClassLoader;
+     
+     //本线程所继承的AccessControlContext环境
+     private AccessControlContext inheritedAccessControlContext;
+     
+     //为匿名线程命名的自动计数器。线程的编号，没有赋初值，所以从0开始。静态的。
+     private static int threadInitNumber;
+     //获得下一个线程的编号，使用了synchronized关键字来同步该方法，防止并发。
+     private static synchronized int nextThreadNum() {
+        return threadInitNumber++;
+     }
+     
+     //与该线程相关的ThreadLocal值，该map由ThreadLocal类保持。
+     ThreadLocal.ThreadLocalMap threadLocals = null;
+     
+     //与该线程相关的InheritableThreadLocal值，该map由InheritableThreadLocal类保持。
+     ThreadLocal.ThreadLocalMap inheritableThreadLocals = null;
+     
+     //该线程请求的堆栈大小，如果创建者没有指定堆栈大小则默认为0
+     private long stackSize;
+     
+     //JVM的私有状态，持续到本地线程终止
+     private long nativeParkEventPointer;
+     
+     //线程ID
+     private long tid;
+     
+     //用于生成线程ID
+     private static long threadSeqNumber;
+     
+     //线程状态变量，默认为0，初始化显示线程"尚未启动”
+     private volatile int threadStatus = 0;
+     
+     private static synchronized long nextThreadID() {
+        return ++threadSeqNumber;
+     }
+     
+     //该参数支持并发调用java.util.concurrent.locks.LockSupport.park
+     volatile Object parkBlocker;
+     
+     //该线程在可中断的I/O操作中阻塞。在设置线程的中断状态后，该中断方法应该被调用
+     private volatile Interruptible blocker;
+     private final Object blockerLock = new Object();
+     
+     void blockedOn(Interruptible b) {
+        synchronized (blockerLock) {
+            blocker = b;
+        }
+     }
+     
+     //线程可以具有的最低优先级
+     public final static int MIN_PRIORITY = 1;
+     
+     //分配给线程的默认优先级
+     public final static int NORM_PRIORITY = 5;
+     
+     //线程可以具有的最高优先级
+     public final static int MAX_PRIORITY = 10;
+     
+     //返回对当前正在执行的线程对象的引用
+     public static native Thread currentThread();
+     
+     //暂停当前正在执行的线程对象，并执行其他线程
+     public static native void yield();
+     
+     //在指定的毫秒数内让当前正在执行的线程休眠（暂停执行），
+     //此操作受到系统计时器和调度程序精度和准确性的影响。该线程不丢失任何监视器的所属权。 
+     public static native void sleep(long millis) throws InterruptedException;
+     
+     //
+     
+  }
 ```
