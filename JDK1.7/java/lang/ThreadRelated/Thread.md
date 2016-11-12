@@ -913,6 +913,29 @@
         uncaughtExceptionHandler = eh;
     }
     
+    //指定未捕获异常的处理程序
+    private void dispatchUncaughtException(Throwable e) {
+        getUncaughtExceptionHandler().uncaughtException(this, e);
+    }
     
+    //移除已经存在于指定队列中的ConcurrentMap键
+    static void processQueue(ReferenceQueue<Class<?>> queue, ConcurrentMap<? extends
+                             WeakReference<Class<?>>, ?> map) {
+        Reference<? extends Class<?>> ref;
+        while((ref = queue.poll()) != null) {
+            map.remove(ref);
+        }
+    }
+    
+    //类对象的弱键
+    static class WeakClassKey extends WeakReference<Class<?>> {...}
+    
+    //一些辅助方法
+    private native void setPriority0(int newPriority);
+    private native void stop0(Object o);
+    private native void suspend0();
+    private native void resume0();
+    private native void interrupt0();
+    private native void setNativeName(String name);
   }
 ```
