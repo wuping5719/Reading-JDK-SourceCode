@@ -31,9 +31,14 @@
             + getName();
      }
      
-     //@CallSensitive注解，用来找到真正发起反射请求的类，是为了堵住漏洞用的。曾经有黑客通过构造双重反射来提升权限，原理是当时反射只检查固定深度的调用者的类，看它有没有特权，例如固定看两层的调用者（getCallerClass(2)）。
-     //如果我的类本来没足够权限群访问某些信息，那我就可以通过双重反射去达到目的：反射相关的类是有很高权限的，而在 我->反射1->反射2 这样的调用链上，反射2检查权限时看到的是反射1的类，这就被欺骗了，导致安全漏洞。
-     //使用CallerSensitive后，getCallerClass不再用固定深度去寻找actual caller（“我”），而是把所有跟反射相关的接口方法都标注上CallerSensitive，搜索时凡看到该注解都直接跳过，这样就有效解决了前面举例的问题。
+     //@CallSensitive注解，用来找到真正发起反射请求的类，是为了堵住漏洞用的。
+     //曾经有黑客通过构造双重反射来提升权限，原理是当时反射只检查固定深度的调用者的类，
+     //看它有没有特权，例如固定看两层的调用者（getCallerClass(2)）。
+     //如果我的类本来没足够权限群访问某些信息，那我就可以通过双重反射去达到目的：
+     //反射相关的类是有很高权限的，而在 我->反射1->反射2 这样的调用链上，
+     //反射2检查权限时看到的是反射1的类，这就被欺骗了，导致安全漏洞。
+     //使用CallerSensitive后，getCallerClass不再用固定深度去寻找actual caller（“我”），
+     //而是把所有跟反射相关的接口方法都标注上CallerSensitive，搜索时凡看到该注解都直接跳过，这样就有效解决了前面举例的问题。
      //根据字符串参数className返回与之相关的类对象
      @CallerSensitive
      public static Class<?> forName(String className)
@@ -42,7 +47,8 @@
                         ClassLoader.getClassLoader(Reflection.getCallerClass()));
      }
     
-     //给定一个类的全限定名，尝试定位，加载，连接类或接口。指定的类加载程序用于加载类或接口。如果参数loader为空，则该类通过引导类加载程序加载。只有在参数initialize是“true”并且它还没有被初始化时才对类进行初始化。
+     //给定一个类的全限定名，尝试定位，加载，连接类或接口。指定的类加载程序用于加载类或接口。
+     //如果参数loader为空，则该类通过引导类加载程序加载。只有在参数initialize是“true”并且它还没有被初始化时才对类进行初始化。
      @CallerSensitive
      public static Class<?> forName(String name, boolean initialize,
                                    ClassLoader loader) throws ClassNotFoundException {
