@@ -511,6 +511,222 @@
         resume0();
     }
     
+    //更改线程的优先级。
+    //首先调用线程的 checkAccess 方法，且不带任何参数。这可能抛出 SecurityException。
+    //在其他情况下，线程优先级被设定为指定的 newPriority 和该线程的线程组的最大允许优先级相比较小的一个。
+    public final void setPriority(int newPriority) {
+        ThreadGroup g;
+        checkAccess();
+        //传入的优先级变量必须在1-10之间，否则抛异常。
+        if (newPriority > MAX_PRIORITY || newPriority < MIN_PRIORITY) {
+            throw new IllegalArgumentException();
+        }public final void setName(String name) {
+        checkAccess();
+        this.name = name.toCharArray();
+    }
+    
+        //当前线程的权限大于线程组的权限，则赋予线程组的最大权限。  
+        //使用线程组中最大的优先级变量，其实传入的优先级变量不一定是真正的优先级。
+        if((g = getThreadGroup()) != null) {
+            if (newPriority > g.getMaxPriority()) {
+                newPriority = g.getMaxPriority();
+            }
+            setPriority0(priority = newPriority);
+        }
+    }
+    
+    //返回线程的优先级。
+    public final int getPriority() {
+        return priority;
+    }
+    
+    //改变线程名称，使之与参数 name 相同。
+    //首先调用线程的 checkAccess 方法，且不带任何参数。这可能抛出 SecurityException。
+    public final void setName(String name) {
+        checkAccess();  //判定当前运行的线程是否有权修改该线程
+        this.name = name.toCharArray();
+    }
+    
+    //返回该线程的名称。
+    public final String getName() {
+        return String.valueOf(name);
+    }
+    
+    //返回该线程所属的线程组。如果该线程已经终止（停止运行），该方法则返回 null。
+    public final ThreadGroup getThreadGroup() {
+        return group;
+    }
+    
+    //返回当前线程的线程组中活动线程的数目。
+    public static int activeCount() {
+        return currentThread().getThreadGroup().activeCount();
+    }
+    
+    //将当前线程的线程组及其子组中的每一个活动线程复制到指定的数组中。
+    //该方法只调用当前线程的线程组的 enumerate 方法，且带有数组参数。
+    //首先，如果有安全管理器，则 enumerate 方法调用安全管理器的 checkAccess 方法，并将线程组作为其参数。
+    //这可能导致抛出 SecurityException。
+    public static int enumerate(Thread tarray[]) {
+        return currentThread().getThreadGroup().enumerate(tarray);
+    }
+    
+    //已过时。该调用的定义依赖于 suspend()，但它遭到了反对。此外，该调用的结果从来都不是意义明确的。
+    //计算该线程中的堆栈帧数。线程必须挂起。
+    @Deprecated
+    public native int countStackFrames();
+    
+    //等待该线程终止的时间最长为 millis 毫秒。超时为 0 意味着要一直等下去。
+    public final synchronized void join(long millis) throws InterruptedException {
+        long base = System.currentTimeMillis();
+        long now = 0;
+
+        if (millis < 0) {
+            throw new IllegalArgumentException("timeout value is negative");
+        }
+        //如果传入的等待时间为0，那判断线程是否活着，如果活着，那么一直等待。
+        if (millis == 0) { 
+            while (isAlive()) {
+                wait(0);
+            }
+        } else {
+            while (isAlive()) {
+                long delay = millis - now;
+                if (delay <= 0) {
+                    break;
+                }
+                wait(delay);
+                now = System.currentTimeMillis() - base;
+            }
+        }
+    }
+    
+    //等待该线程终止的时间最长为 millis 毫秒 + nanos 纳秒。
+    public final synchronized void join(long millis, int nanos) throws InterruptedException {
+        if (millis < 0) {
+            throw new IllegalArgumentException("timeout value is negative");
+        }
+
+        if (nanos < 0 || nanos > 999999) {
+            throw new IllegalArgumentException("nanosecond timeout value out of range");
+        }
+
+        if (nanos >= 500000 || (nanos != 0 && millis == 0)) {
+            millis++;
+        }
+
+        join(millis);
+    }
+    
+    //等待该线程终止。
+    public final void join() throws InterruptedException {
+        join(0);
+    }
+    
+    //将当前线程的堆栈跟踪打印至标准错误流。该方法仅用于调试。
+    public static void dumpStack() {
+        new Exception("Stack trace").printStackTrace();
+    }
+    
+    //将该线程标记为守护线程或用户线程。当正在运行的线程都是守护线程时，Java 虚拟机退出。
+    //该方法必须在启动线程前调用。
+    //该方法首先调用该线程的 checkAccess 方法，且不带任何参数。这可能抛出 SecurityException（在当前线程中）。
+    public final void setDaemon(boolean on) {
+        checkAccess();
+        if (isAlive()) {
+            throw new IllegalThreadStateException();
+        }
+        daemon = on;
+    }
+    
+    //测试该线程是否为守护线程。
+    public final boolean isDaemon() {
+        return daemon;
+    }
+    
+    //判定当前运行的线程是否有权修改该线程。
+    //如果有安全管理器，则调用其 checkAccess 方法，并将该线程作为其参数。这可能导致抛出 SecurityException。
+    public final void checkAccess() {
+        SecurityManager security = System.getSecurityManager();
+        if (security != null) {
+            security.checkAccess(this);
+        }
+    }
+    
+    //返回该线程的字符串表示形式，包括线程名称、优先级和线程组。
+    public String toString() {
+        ThreadGroup group = getThreadGroup();
+        if (group != null) {
+            return "Thread[" + getName() + "," + getPriority() + "," +
+                           group.getName() + "]";
+        } else {
+            return "Thread[" + getName() + "," + getPriority() + "," +
+                            "" + "]";
+        }
+    }
+    
+    //返回该线程的上下文 ClassLoader。上下文 ClassLoader 由线程创建者提供，供运行于该线程中的代码在加载类和资源时使用。
+    //如果未设定，则默认为父线程的 ClassLoader 上下文。原始线程的上下文 ClassLoader 通常设定为用于加载应用程序的类加载器。
+    //首先，如果有安全管理器，并且调用者的类加载器不是 null，也不同于其上下文类加载器正在被请求的线程上下文类加载器的祖先，
+    //则通过 RuntimePermission("getClassLoader") 权限调用该安全管理器的 checkPermission 方法，
+    //查看是否可以获取上下文 ClassLoader。
+    public ClassLoader getContextClassLoader() {
+        if (contextClassLoader == null)
+            return null;
+
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
+            ClassLoader.checkClassLoaderPermission(contextClassLoader, Reflection.getCallerClass());
+        }
+        return contextClassLoader;
+    }
+    
+    //设置该线程的上下文 ClassLoader。
+    //上下文 ClassLoader 可以在创建线程设置，并允许创建者在加载类和资源时向该线程中运行的代码提供适当的类加载器。
+    //首先，如果有安全管理器，则通过 RuntimePermission("setContextClassLoader") 权限调用其 checkPermission 方法，
+    //查看是否可以设置上下文 ClassLoader。
+    public void setContextClassLoader(ClassLoader cl) {
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
+            sm.checkPermission(new RuntimePermission("setContextClassLoader"));
+        }
+        contextClassLoader = cl;
+    }
+    
+    //当且仅当当前线程在指定的对象上保持监视器锁时，才返回 true。
+    //该方法旨在使程序能够断言当前线程已经保持一个指定的锁：assert Thread.holdsLock(obj);
+    public static native boolean holdsLock(Object obj);
+
+    private static final StackTraceElement[] EMPTY_STACK_TRACE = new StackTraceElement[0];
+    
+    //返回一个表示该线程堆栈转储的堆栈跟踪元素数组。如果该线程尚未启动或已经终止，则该方法将返回一个零长度数组。
+    //如果返回的数组不是零长度的，则其第一个元素代表堆栈顶，它是该序列中最新的方法调用。
+    //最后一个元素代表堆栈底，是该序列中最旧的方法调用。
+    //如果有安全管理器，并且该线程不是当前线程，则通过 RuntimePermission("getStackTrace") 
+    //权限调用安全管理器的 checkPermission 方法，查看是否可以获取堆栈跟踪。
+    //某些虚拟机在某些情况下可能会从堆栈跟踪中省略一个或多个堆栈帧。
+    //在极端情况下，没有该线程堆栈跟踪信息的虚拟机可以从该方法返回一个零长度数组。
+    public StackTraceElement[] getStackTrace() {
+        if (this != Thread.currentThread()) {
+            SecurityManager security = System.getSecurityManager();
+            if (security != null) {
+                security.checkPermission(SecurityConstants.GET_STACK_TRACE_PERMISSION);
+            }
+           
+            if (!isAlive()) {
+                return EMPTY_STACK_TRACE;
+            }
+            StackTraceElement[][] stackTraceArray = dumpThreads(new Thread[] {this});
+            StackTraceElement[] stackTrace = stackTraceArray[0];
+            
+            if (stackTrace == null) {
+                stackTrace = EMPTY_STACK_TRACE;
+            }
+            return stackTrace;
+        } else {
+            return (new Exception()).getStackTrace();
+        }
+    }
+    
     //
     
   }
