@@ -899,11 +899,20 @@
         return defaultUncaughtExceptionHandler;
     }
     
-    //返回该线程由于未捕获到异常而突然终止时调用的处理程序。如果该线程尚未明确设置未捕获到的异常处理程序，返回该线程的 ThreadGroup 对象，除非该线程已经终止，在这种情况下，将返回 null。
+    //返回该线程由于未捕获到异常而突然终止时调用的处理程序。如果该线程尚未明确设置未捕获到的异常处理程序，
+    //则返回该线程的 ThreadGroup 对象，除非该线程已经终止，在这种情况下，将返回 null。
     public UncaughtExceptionHandler getUncaughtExceptionHandler() {
         return uncaughtExceptionHandler != null ? uncaughtExceptionHandler : group;
     }
 
+    //设置该线程由于未捕获到异常而突然终止时调用的处理程序。
+    //通过明确设置未捕获到的异常处理程序，线程可以完全控制它对未捕获到的异常作出响应的方式。 
+    //如果没有设置这样的处理程序，则该线程的 ThreadGroup 对象将充当其处理程序。
+    public void setUncaughtExceptionHandler(UncaughtExceptionHandler eh) {
+        checkAccess();
+        uncaughtExceptionHandler = eh;
+    }
+    
     
   }
 ```
