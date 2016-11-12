@@ -38,7 +38,8 @@
      //反射相关的类是有很高权限的，而在 我->反射1->反射2 这样的调用链上，
      //反射2检查权限时看到的是反射1的类，这就被欺骗了，导致安全漏洞。
      //使用CallerSensitive后，getCallerClass不再用固定深度去寻找actual caller（“我”），
-     //而是把所有跟反射相关的接口方法都标注上CallerSensitive，搜索时凡看到该注解都直接跳过，这样就有效解决了前面举例的问题。
+     //而是把所有跟反射相关的接口方法都标注上CallerSensitive，
+     //搜索时凡看到该注解都直接跳过，这样就有效解决了前面举例的问题。
      //根据字符串参数className返回与之相关的类对象
      @CallerSensitive
      public static Class<?> forName(String className)
@@ -48,7 +49,8 @@
      }
     
      //给定一个类的全限定名，尝试定位，加载，连接类或接口。指定的类加载程序用于加载类或接口。
-     //如果参数loader为空，则该类通过引导类加载程序加载。只有在参数initialize是“true”并且它还没有被初始化时才对类进行初始化。
+     //如果参数loader为空，则该类通过引导类加载程序加载。
+     //只有在参数initialize是“true”并且它还没有被初始化时才对类进行初始化。
      @CallerSensitive
      public static Class<?> forName(String name, boolean initialize,
                                    ClassLoader loader) throws ClassNotFoundException {
@@ -87,7 +89,8 @@
             try {
                 Class<?>[] empty = {};
                 final Constructor<T> c = getConstructor0(empty, Member.DECLARED);
-                //禁用“构造函数”上的可访问性检查，因为我们必须在这里做安全检查（通过堆栈深度来判断构造函数安全检查是否工作是错误的）
+                //禁用“构造函数”上的可访问性检查，因为我们必须在这里做安全检查
+                //（通过堆栈深度来判断构造函数安全检查是否工作是错误的）
                 java.security.AccessController.doPrivileged(
                     new java.security.PrivilegedAction<Void>() {
                         public Void run() {
@@ -119,13 +122,14 @@
             return null;
         }
      }
-     private volatile transient Constructor<T> cachedConstructor;         //缓存的构造函数
-     private volatile transient Class<?>       newInstanceCallerCache;    //新的实例调用缓存
+     private volatile transient Constructor<T> cachedConstructor;   //缓存的构造函数
+     private volatile transient Class<?>       newInstanceCallerCache; //新的实例调用缓存
      
      //本地方法：确定指定的对象是否为与此类所表示的对象赋值兼容。
      public native boolean isInstance(Object obj);
      
-     //本地方法：确定此Class对象所表示的类或接口是不一样的，或者说是一个超类或超接口，由指定的Class参数所表示类或接口。
+     //本地方法：确定此Class对象所表示的类或接口是不一样的，
+     //或者说是一个超类或超接口，由指定的Class参数所表示类或接口。
      public native boolean isAssignableFrom(Class<?> cls);
      
      //本地方法：判定指定Class对象是否表示一个接口类型。
@@ -247,11 +251,13 @@
 
              // 执行访问检查
              Class<?> enclosingCandidate = enclosingInfo.getEnclosingClass();
-             // 要非常小心，不要改变checkMemberAccessd的堆栈深度，详细查看java.lang.securityManager.checkMemberAccess
+             // 要非常小心，不要改变checkMemberAccessd的堆栈深度，
+             //详细查看java.lang.securityManager.checkMemberAccess
              // 注意，我们需要在外围类上做这个
              enclosingCandidate.checkMemberAccess(Member.DECLARED,
                                                  Reflection.getCallerClass(), true);
-             //循环所有声明的方法，匹配方法名称、参数的数量和类型，和返回类型。匹配返回类型也是必要的因为协变返回。
+             //循环所有声明的方法，匹配方法名称、参数的数量和类型，和返回类型。
+             //匹配返回类型也是必要的因为协变返回。
              for(Method m: enclosingCandidate.getDeclaredMethods()) {
                 if (m.getName().equals(enclosingInfo.getName()) ) {
                     Class<?>[] candidateParamClasses = m.getParameterTypes();
@@ -311,7 +317,9 @@
 
         boolean isConstructor() { return !isPartial() && "<init>".equals(name); }
 
-        boolean isMethod() { return !isPartial() && !isConstructor() && !"<clinit>".equals(name); }
+        boolean isMethod() { 
+           return !isPartial() && !isConstructor() && !"<clinit>".equals(name); 
+        }
 
         Class<?> getEnclosingClass() { return enclosingClass; }
 
@@ -452,12 +460,13 @@
      
      //返回一个Field对象，它反映此Class对象所表示的类或接口的指定公共成员字段。
      @CallerSensitive
-     public Field getField(String name) throws NoSuchFieldException, SecurityException {...}
+     public Field getField(String name) 
+         throws NoSuchFieldException, SecurityException {...}
      
      //返回一个Method对象，它反映此Class对象所表示的类或接口的指定公共成员方法。
      @CallerSensitive
      public Method getMethod(String name, Class<?>... parameterTypes) 
-                                   throws NoSuchMethodException, SecurityException {...}
+                              throws NoSuchMethodException, SecurityException {...}
                                    
      @CallerSensitive
      public Constructor<T> getConstructor(Class<?>... parameterTypes)
@@ -478,7 +487,8 @@
      public Constructor<?>[] getDeclaredConstructors() throws SecurityException {...}
      
      @CallerSensitive
-     public Field getDeclaredField(String name) throws NoSuchFieldException, SecurityException {...}
+     public Field getDeclaredField(String name) 
+              throws NoSuchFieldException, SecurityException {...}
      
      @CallerSensitive
      public Method getDeclaredMethod(String name, Class<?>... parameterTypes)
@@ -534,8 +544,10 @@
     
     private static boolean isCheckMemberAccessOverridden(SecurityManager smgr) {...}
     
-    //检查在当前包准入政策下客户端加载的类加载器是否被允许访问该类。如果访问被拒绝，引发SecurityException。
-    private void checkMemberAccess(int which, Class<?> caller, boolean checkProxyInterfaces) {...}
+    //检查在当前包准入政策下客户端加载的类加载器是否被允许访问该类。
+    //如果访问被拒绝，引发SecurityException。
+    private void checkMemberAccess(int which, Class<?> caller,
+                     boolean checkProxyInterfaces) {...}
     
     //解析名称
     private String resolveName(String name) {
@@ -616,9 +628,11 @@
     //处理字段，构造函数和方法的辅助器
     private Field searchFields(Field[] fields, String name) {...}
     private Field getField0(String name) throws NoSuchFieldException {...}
-    private static Method searchMethods(Method[] methods, String name, Class<?>[] parameterTypes) {...}
+    private static Method searchMethods(Method[] methods, String name, 
+                                 Class<?>[] parameterTypes) {...}
     private Method getMethod0(String name, Class<?>[] parameterTypes) {...}
-    private Constructor<T> getConstructor0(Class<?>[] parameterTypes, int which) throws NoSuchMethodException {...}
+    private Constructor<T> getConstructor0(Class<?>[] parameterTypes, int which) 
+                                     throws NoSuchMethodException {...}
     
     //其他辅助器和基本实现
     private static boolean arrayContentsEq(Object[] a1, Object[] a2) {...}
