@@ -1,6 +1,9 @@
 * Thread类的源码(JDK1.7)解读, 由于本人水平有限, 如有纰漏之处, 烦请留言指正. (Email: wp571988@163.com)   
   &nbsp;&nbsp; 线程是程序中的执行线程。Java 虚拟机允许应用程序并发地运行多个执行线程。
-
+  
+  &nbsp;&nbsp; 线程状态转换图：(借的)：<http://www.devba.com/index.php/archives/3892.html>
+  <p><img src="http://images.cnblogs.com/cnblogs_com/wp5719/831982/o_thread.png" /></p>
+  
   &nbsp;&nbsp; 每个线程都有一个优先级，高优先级线程的执行优先于低优先级线程。每个线程都可以或不可以标记为一个守护程序。当某个线程中运行的代码创建一个新 Thread 对象时，该新线程的初始优先级被设定为创建线程的优先级，并且当且仅当创建线程是守护线程时，新线程才是守护程序。
 
   &nbsp;&nbsp; 当 Java 虚拟机启动时，通常都会有单个非守护线程（它通常会调用某个指定类的 main 方法）。Java 虚拟机会继续执行线程，直到下列任一情况出现时为止：  
