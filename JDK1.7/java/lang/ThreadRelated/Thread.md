@@ -243,26 +243,65 @@
     }
     
     //分配新的 Thread 对象。
-    //这种构造方法与 Thread(null, null, gname ) 具有相同的作用，其中 gname 是一个新生成的名称。
+    //这种构造方法与 Thread(null, null, gname) 具有相同的作用，其中 gname 是一个新生成的名称。
     //自动生成的名称的形式为 "Thread-"+ n，其中的 n 为整数。
     public Thread() {
         init(null, null, "Thread-" + nextThreadNum(), 0);
     }
     
     //分配新的 Thread 对象。
-    //这种构造方法与 Thread(null, target, gname ) 具有相同的作用，其中的 gname 是一个新生成的名称。
+    //这种构造方法与 Thread(null, target, gname) 具有相同的作用，其中的 gname 是一个新生成的名称。
     //自动生成的名称的形式为 “Thread-”+ n，其中的 n 为整数。
     public Thread(Runnable target) {
         init(null, target, "Thread-" + nextThreadNum(), 0);
     }
     
-    //分配新的 Thread 对象。
-    //这种构造方法与 Thread(group, target, gname) 具有相同的作用，其中的 gname 是一个新生成的名称。
-    //自动生成的名称的形式为 "Thread-"+n ，其中的 n 为整数。 
+    //创建一个新线程，继承了AccessControlContext。
+    //这不是一个公共构造函数。
     Thread(Runnable target, AccessControlContext acc) {
         init(null, target, "Thread-" + nextThreadNum(), 0, acc);
     }
     
-    //http://www.myexception.cn/program/1033904.html
+    //分配新的 Thread 对象。
+    //这种构造方法与 Thread(group, target, gname) 具有相同的作用，其中的 gname 是一个新生成的名称。
+    //自动生成的名称的形式为 "Thread-"+ n ，其中的 n 为整数。
+    public Thread(ThreadGroup group, Runnable target) {
+        init(group, target, "Thread-" + nextThreadNum(), 0);
+    }
+    
+    //分配新的 Thread 对象。这种构造方法与 Thread(null, null, name) 具有相同的作用。
+    public Thread(String name) {
+        init(null, null, name, 0);
+    }
+
+    //分配新的 Thread 对象。这种构造方法与 Thread(group, null, name) 具有相同的作用。
+    public Thread(ThreadGroup group, String name) {
+        init(group, null, name, 0);
+    }
+    
+    //分配新的 Thread 对象。这种构造方法与 Thread(null, target, name) 具有相同的作用。
+    public Thread(Runnable target, String name) {
+        init(null, target, name, 0);
+    }
+    
+    //分配新的 Thread 对象，以便将 target 作为其运行对象，将指定的 name 作为其名称，
+    //并作为 group 所引用的线程组的一员。
+    //如果 group 为 null，并且有安全管理器，则该组由安全管理器的 getThreadGroup 方法确定。
+    //如果 group 为 null，并且没有安全管理器，或安全管理器的 getThreadGroup 方法返回 null，
+    //则该组与创建新线程的线程被设定为相同的 ThreadGroup。
+    //如果有安全管理器，则其 checkAccess 方法通过 ThreadGroup 作为其参数被调用。
+    //此外，当被重写 getContextClassLoader 或 setContextClassLoader 
+    //方法的子类构造方法直接或间接调用时，其 checkPermission 方法通过 
+    // RuntimePermission("enableContextClassLoaderOverride") 权限调用。
+    //其结果可能是 SecurityException。
+    //如果 target 参数不是 null，则 target 的 run 方法在启动该线程时调用。
+    //如果 target 参数为 null，则该线程的 run 方法在该线程启动时调用。
+    //新创建线程的优先级被设定为创建该线程的线程的优先级，即当前正在运行的线程的优先级。
+    //方法 setPriority 可用于将优先级更改为一个新值。
+    //当且仅当创建新线程的线程当前被标记为守护线程时，新创建的线程才被标记为守护线程。
+    //方法 setDaemon 可用于改变线程是否为守护线程。
+    public Thread(ThreadGroup group, Runnable target, String name) {
+        init(group, target, name, 0);
+    }
   }
 ```
