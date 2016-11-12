@@ -664,9 +664,11 @@
         }
     }
     
-    //返回该线程的上下文 ClassLoader。上下文 ClassLoader 由线程创建者提供，供运行于该线程中的代码在加载类和资源时使用。
-    //如果未设定，则默认为父线程的 ClassLoader 上下文。原始线程的上下文 ClassLoader 通常设定为用于加载应用程序的类加载器。
-    //首先，如果有安全管理器，并且调用者的类加载器不是 null，也不同于其上下文类加载器正在被请求的线程上下文类加载器的祖先，
+    //返回该线程的上下文 ClassLoader。上下文 ClassLoader 由线程创建者提供，
+    //供运行于该线程中的代码在加载类和资源时使用。如果未设定，则默认为父线程的 ClassLoader 上下文。
+    //原始线程的上下文 ClassLoader 通常设定为用于加载应用程序的类加载器。
+    //首先，如果有安全管理器，并且调用者的类加载器不是 null，
+    //也不同于其上下文类加载器正在被请求的线程上下文类加载器的祖先，
     //则通过 RuntimePermission("getClassLoader") 权限调用该安全管理器的 checkPermission 方法，
     //查看是否可以获取上下文 ClassLoader。
     public ClassLoader getContextClassLoader() {
@@ -682,8 +684,8 @@
     
     //设置该线程的上下文 ClassLoader。
     //上下文 ClassLoader 可以在创建线程设置，并允许创建者在加载类和资源时向该线程中运行的代码提供适当的类加载器。
-    //首先，如果有安全管理器，则通过 RuntimePermission("setContextClassLoader") 权限调用其 checkPermission 方法，
-    //查看是否可以设置上下文 ClassLoader。
+    //首先，如果有安全管理器，则通过 RuntimePermission("setContextClassLoader") 
+    //权限调用其 checkPermission 方法，查看是否可以设置上下文 ClassLoader。
     public void setContextClassLoader(ClassLoader cl) {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
@@ -727,7 +729,181 @@
         }
     }
     
-    //
+    //返回所有活动线程的堆栈跟踪的一个映射。映射键是线程，而每个映射值都是一个 StackTraceElement 数组，
+    //该数组表示相应 Thread 的堆栈转储。 返回的堆栈跟踪的格式都是针对 getStackTrace 方法指定的。
+    //在调用该方法的同时，线程可能也在执行。每个线程的堆栈跟踪仅代表一个快照，并且每个堆栈跟踪都可以在不同时间获得。
+    //如果虚拟机没有线程的堆栈跟踪信息，则映射值中将返回一个零长度数组。
+    //如果有安全管理器，则通过 RuntimePermission("getStackTrace") 权限和
+    //RuntimePermission("modifyThreadGroup") 权限调用其 checkPermission 方法，
+    //查看是否可以获取所有线程的堆栈跟踪。
+    public static Map<Thread, StackTraceElement[]> getAllStackTraces() {
+        SecurityManager security = System.getSecurityManager();
+        if (security != null) {
+            security.checkPermission(SecurityConstants.GET_STACK_TRACE_PERMISSION);
+            security.checkPermission(SecurityConstants.MODIFY_THREADGROUP_PERMISSION);
+        }
+
+        // Get a snapshot of the list of all threads
+        Thread[] threads = getThreads();
+        StackTraceElement[][] traces = dumpThreads(threads);
+        Map<Thread, StackTraceElement[]> m = new HashMap<>(threads.length);
+        for (int i = 0; i < threads.length; i++) {
+            StackTraceElement[] stackTrace = traces[i];
+            if (stackTrace != null) {
+                m.put(threads[i], stackTrace);
+            }
+        }
+        return m;
+    }
+    
+    private static final RuntimePermission SUBCLASS_IMPLEMENTATION_PERMISSION =
+                    new RuntimePermission("enableContextClassLoaderOverride");
+    
+    //子类安全审计结果的缓存
+    private static class Caches {
+        static final ConcurrentMap<WeakClassKey,Boolean> subclassAudits = new ConcurrentHashMap<>();
+
+        //子队列弱引用审计
+        static final ReferenceQueue<Class<?>> subclassAuditsQueue = new ReferenceQueue<>();
+    }
+    
+    //证明这个（可能是子类）实例可以在不违反安全约束的条件下被构造：子类不能重写安全敏感的非final方法，
+    //并且“enableContextClassLoaderOverride”，检查RuntimePermission。    
+    private static boolean isCCLOverridden(Class cl) {
+        if (cl == Thread.class)
+            return false;
+
+        processQueue(Caches.subclassAuditsQueue, Caches.subclassAudits);
+        WeakClassKey key = new WeakClassKey(cl, Caches.subclassAuditsQueue);
+        Boolean result = Caches.subclassAudits.get(key);
+        if (result == null) {
+            result = Boolean.valueOf(auditSubclass(cl));
+            Caches.subclassAudits.putIfAbsent(key, result);
+        }
+
+        return result.booleanValue();
+    }
+    
+    //对给定子类进行反射检查，以验证它不覆盖安全敏感的非最终方法。如果子类重写任何方法返回true，否则为false。
+    private static boolean auditSubclass(final Class subcl) {
+        Boolean result = AccessController.doPrivileged(
+            new PrivilegedAction<Boolean>() {
+                public Boolean run() {
+                    for (Class cl = subcl; cl != Thread.class; cl = cl.getSuperclass()) {
+                        try {
+                            cl.getDeclaredMethod("getContextClassLoader", new Class[0]);
+                            return Boolean.TRUE;
+                        } catch (NoSuchMethodException ex) {
+                        }
+                        try {
+                            Class[] params = {ClassLoader.class};
+                            cl.getDeclaredMethod("setContextClassLoader", params);
+                            return Boolean.TRUE;
+                        } catch (NoSuchMethodException ex) {
+                        }
+                    }
+                    return Boolean.FALSE;
+                }
+            }
+        );
+        return result.booleanValue();
+    }
+
+    private native static StackTraceElement[][] dumpThreads(Thread[] threads);
+    private native static Thread[] getThreads();
+    
+    //返回该线程的标识符。线程 ID 是一个正的 long 数，在创建该线程时生成。
+    //线程 ID 是唯一的，并终生不变。线程终止时，该线程 ID 可以被重新使用。
+    public long getId() {
+        return tid;
+    }
+    
+    //线程状态
+    //在给定时间点上，一个线程只能处于一种状态。这些状态是虚拟机状态，它们并没有反映所有操作系统线程状态。
+    public enum State {
+        //至今尚未启动的线程处于这种状态。 
+        NEW,
+
+        //可运行线程的线程状态。
+        //处于可运行状态的某一线程正在 Java 虚拟机中运行，但它可能正在等待操作系统中的其他资源，比如处理器。 
+        RUNNABLE,
+
+        //受阻塞并且正在等待监视器锁的某一线程的线程状态。
+        //处于受阻塞状态的某一线程正在等待监视器锁，以便进入一个同步的块/方法，
+        //或者在调用 Object.wait 之后再次进入同步的块/方法。 
+        BLOCKED,
+
+        //无限期地等待另一个线程来执行某一特定操作的线程处于这种状态。 
+        //某一等待线程的线程状态。某一线程因为调用下列方法之一而处于等待状态： 
+        //   不带超时值的 Object.wait
+        //   不带超时值的 Thread.join
+        //   LockSupport.park 
+        //处于等待状态的线程正等待另一个线程，以执行特定操作。 
+        //例如，已经在某一对象上调用了 Object.wait() 的线程正等待另一个线程，
+        //以便在该对象上调用 Object.notify() 或 Object.notifyAll()。
+        //已经调用了 Thread.join() 的线程正在等待指定线程终止。 
+        WAITING,
+
+        //具有指定等待时间的某一等待线程的线程状态。
+        //某一线程因为调用以下带有指定正等待时间的方法之一而处于定时等待状态： 
+        //   Thread.sleep 
+        //   带有超时值的 Object.wait 
+        //   带有超时值的 Thread.join 
+        //   LockSupport.parkNanos 
+        //   LockSupport.parkUntil 
+        TIMED_WAITING,
+
+        //已退出的线程处于这种状态。 
+        TERMINATED;
+    }
+    
+    //返回该线程的状态。该方法用于监视系统状态，不用于同步控制。
+    public State getState() {
+        return sun.misc.VM.toThreadState(threadStatus);
+    }
+    
+    //当 Thread 因未捕获的异常而突然终止时，调用处理程序的接口。 
+    //当某一线程因未捕获的异常而即将终止时，Java 虚拟机将使用 Thread.getUncaughtExceptionHandler() 
+    //查询该线程以获得其 UncaughtExceptionHandler 的线程，并调用处理程序的 uncaughtException 方法，
+    //将线程和异常作为参数传递。如果某一线程没有明确设置其 UncaughtExceptionHandler，
+    //则将它的 ThreadGroup 对象作为其 UncaughtExceptionHandler。
+    //如果 ThreadGroup 对象对处理异常没有什么特殊要求，那么它可以将调用转发给默认的未捕获异常处理程序。 
+    public interface UncaughtExceptionHandler {
+        void uncaughtException(Thread t, Throwable e);
+    }
+    
+    private volatile UncaughtExceptionHandler uncaughtExceptionHandler;
+
+    private static volatile UncaughtExceptionHandler defaultUncaughtExceptionHandler;
+    
+    //设置当线程由于未捕获到异常而突然终止，并且没有为该线程定义其他处理程序时所调用的默认处理程序。
+    //未捕获到的异常处理首先由线程控制，然后由线程的 ThreadGroup 对象控制，
+    //最后由未捕获到的默认异常处理程序控制。如果线程不设置明确的未捕获到的异常处理程序，
+    //并且该线程的线程组（包括父线程组）未特别指定其 uncaughtException 方法，
+    //则将调用默认处理程序的 uncaughtException 方法。
+    //通过设置未捕获到的默认异常处理程序，
+    //应用程序可以为那些已经接受系统提供的任何“默认”行为的线程改变未捕获到的异常处理方式
+    //（如记录到某一特定设备或文件）。
+    //请注意，未捕获到的默认异常处理程序通常不应顺从该线程的 ThreadGroup 对象，因为这可能导致无限递归。
+    public static void setDefaultUncaughtExceptionHandler(UncaughtExceptionHandler eh) {
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
+            sm.checkPermission(new RuntimePermission("setDefaultUncaughtExceptionHandler"));
+        }
+
+        defaultUncaughtExceptionHandler = eh;
+    }
+    
+    //返回线程由于未捕获到异常而突然终止时调用的默认处理程序。如果返回值为 null，则没有默认处理程序。
+    public static UncaughtExceptionHandler getDefaultUncaughtExceptionHandler(){
+        return defaultUncaughtExceptionHandler;
+    }
+    
+    //返回该线程由于未捕获到异常而突然终止时调用的处理程序。如果该线程尚未明确设置未捕获到的异常处理程序，返回该线程的 ThreadGroup 对象，除非该线程已经终止，在这种情况下，将返回 null。
+    public UncaughtExceptionHandler getUncaughtExceptionHandler() {
+        return uncaughtExceptionHandler != null ? uncaughtExceptionHandler : group;
+    }
+
     
   }
 ```
