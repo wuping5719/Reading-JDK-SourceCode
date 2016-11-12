@@ -303,5 +303,215 @@
     public Thread(ThreadGroup group, Runnable target, String name) {
         init(group, target, name, 0);
     }
+    
+    //分配新的 Thread 对象，以便将 target 作为其运行对象，将指定的 name 作为其名称，
+    //作为 group 所引用的线程组的一员，并具有指定的堆栈大小。
+    //除了允许指定线程堆栈大小以外，这种构造方法与 Thread(ThreadGroup,Runnable,String) 完全一样。
+    //堆栈大小是虚拟机要为该线程堆栈分配的地址空间的近似字节数。 
+    //stackSize 参数（如果有）的作用具有高度的平台依赖性。
+    //在某些平台上，指定一个较高的 stackSize 参数值可能使线程在抛出 StackOverflowError 之前达到较大的递归深度。
+    //同样，指定一个较低的值将允许较多的线程并发地存在，且不会抛出 OutOfMemoryError（或其他内部错误）。
+    //stackSize 参数的值与最大递归深度和并发程度之间的关系细节与平台有关。
+    //在某些平台上，stackSize 参数的值无论如何不会起任何作用。
+    //作为建议，可以让虚拟机自由处理 stackSize 参数。
+    //如果指定值对于平台来说过低，则虚拟机可能使用某些特定于平台的最小值；
+    //如果指定值过高，则虚拟机可能使用某些特定于平台的最大值。 
+    //同样，虚拟机还会视情况自由地舍入指定值（或完全忽略它）。
+    //将 stackSize 参数值指定为零将使这种构造方法与 
+    // Thread(ThreadGroup, Runnable, String) 构造方法具有完全相同的作用。
+    //由于这种构造方法的行为具有平台依赖性，因此在使用它时要非常小心。
+    //执行特定计算所必需的线程堆栈大小可能会因 JRE 实现的不同而不同。
+    //鉴于这种不同，仔细调整堆栈大小参数可能是必需的，而且可能要在支持应用程序运行的 JRE 实现上反复调整。
+    //实现注意事项：鼓励 Java 平台实现者文档化其 stackSize parameter 的实现行为。
+    public Thread(ThreadGroup group, Runnable target, String name, long stackSize) {
+        init(group, target, name, stackSize);
+    }
+    
+    //使该线程开始执行；Java 虚拟机调用该线程的 run 方法。
+    //结果是两个线程并发地运行；当前线程（从调用返回给 start 方法）和另一个线程（执行其 run 方法）。
+    //多次启动一个线程是非法的。特别是当线程已经结束执行后，不能再重新启动。
+    public synchronized void start() {
+        //如果线程状态不为0，则抛出线程状态非法的异常。
+        //这也意味着重复调用start()方法会抛出异常。所以一个线程要启动时只能调用一次start()方法。
+        if (threadStatus != 0)
+            throw new IllegalThreadStateException();
+
+        //否则，就把这个线程对象加到线程组中
+        group.add(this);
+
+        boolean started = false;
+        try {
+            start0();   //调用native的start0()方法来启动新线程
+            started = true;
+        } finally {
+            try {
+                if (!started) {
+                    group.threadStartFailed(this);
+                }
+            } catch (Throwable ignore) {
+                //什么都不做
+            }
+        }
+    }
+    private native void start0();
+    
+    //如果该线程是使用独立的 Runnable 运行对象构造的，则调用该 Runnable 对象的 run 方法；
+    //否则，该方法不执行任何操作并返回。
+    //Thread 的子类应该重写该方法。
+    @Override
+    public void run() {
+        //如果有目标Runnable对象，那么执行目标Runnable对象的run方法，否则什么都不做。
+        if (target != null) { 
+            target.run();
+        }
+    }
+    
+    //该方法被系统调用在线程退出之前清理该线程拥有的资源
+    private void exit() {
+        if (group != null) {
+            group.threadTerminated(this);
+            group = null;
+        }
+        target = null;
+        /* Speed the release of some of these resources */
+        threadLocals = null;
+        inheritableThreadLocals = null;
+        inheritedAccessControlContext = null;
+        blocker = null;
+        uncaughtExceptionHandler = null;
+    }
+    
+    //已过时。 该方法具有固有的不安全性。
+    //用 Thread.stop 来终止线程将释放它已经锁定的所有监视器
+    //（作为沿堆栈向上传播的未检查 ThreadDeath 异常的一个自然后果）。
+    //如果以前受这些监视器保护的任何对象都处于一种不一致的状态，则损坏的对象将对其他线程可见，这有可能导致任意的行为。
+    //stop 的许多使用都应由只修改某些变量以指示目标线程应该停止运行的代码来取代。
+    //目标线程应定期检查该变量，并且如果该变量指示它要停止运行，则从其运行方法依次返回。
+    //如果目标线程等待很长时间（例如基于一个条件变量），则应使用 interrupt 方法来中断该等待。
+    //有关更多信息，请参阅为何不赞成使用 Thread.stop、Thread.suspend 和 Thread.resume。
+    //强迫线程停止执行。
+    //如果安装了安全管理器，则以 this 作为其参数调用 checkAccess 方法。
+    //这可能引发 SecurityException（在当前线程中）。
+    //如果该线程不同于当前线程（即当前线程试图终止除它本身以外的某一线程），
+    //则安全管理器的 checkPermission 方法（带有 RuntimePermission("stopThread") 参数）也会被调用。
+    //这会再次抛出 SecurityException（在当前线程中）。
+    //无论该线程在做些什么，它所代表的线程都被迫异常停止，并抛出一个新创建的 ThreadDeath 对象，作为异常。
+    //停止一个尚未启动的线程是允许的。 如果最后启动了该线程，它会立即终止。
+    //应用程序通常不应试图捕获 ThreadDeath，除非它必须执行某些异常的清除操作
+    //（注意，抛出 ThreadDeath 将导致 try 语句的 finally 子句在线程正式终止前执行）。
+    //如果 catch 子句捕获了一个 ThreadDeath 对象，则重新抛出该对象很重要，因为这样该线程才会真正终止。
+    //对其他未捕获的异常作出反应的顶级错误处理程序不会打印输出消息，
+    //或者另外通知应用程序未捕获到的异常是否为 ThreadDeath 的一个实例。
+    @Deprecated
+    public final void stop() {
+        stop(new ThreadDeath());
+    }
+    
+    //已过时。  该方法具有固有的不安全性。
+    //强迫线程停止执行。
+    @Deprecated
+    public final synchronized void stop(Throwable obj) {
+        if (obj == null)
+            throw new NullPointerException();
+
+        SecurityManager security = System.getSecurityManager();
+        if (security != null) {
+            checkAccess();
+            if ((this != Thread.currentThread()) ||
+                (!(obj instanceof ThreadDeath))) {
+                security.checkPermission(SecurityConstants.STOP_THREAD_PERMISSION);
+            }
+        }
+
+        if (threadStatus != 0) {
+            resume(); // Wake up thread if it was suspended; no-op otherwise
+        }
+
+        // The VM can handle all thread states
+        stop0(obj);
+    }
+    
+    //中断线程。
+    //如果当前线程没有中断它自己（这在任何情况下都是允许的），
+    //则该线程的 checkAccess 方法就会被调用，这可能抛出 SecurityException。
+    //如果线程在调用 Object 类的 wait()、wait(long) 或 wait(long, int) 方法，
+    //或者该类的 join()、join(long)、join(long, int)、sleep(long) 或 sleep(long, int) 方法过程中受阻，
+    //则其中断状态将被清除，它还将收到一个 InterruptedException。
+    //如果该线程在可中断的通道上的 I/O 操作中受阻，则该通道将被关闭，
+    //该线程的中断状态将被设置并且该线程将收到一个 ClosedByInterruptException。
+    //如果该线程在一个 Selector 中受阻，则该线程的中断状态将被设置，它将立即从选择操作返回，
+    //并可能带有一个非零值，就好像调用了选择器的 wakeup 方法一样。
+    //如果以前的条件都没有保存，则该线程的中断状态将被设置。
+    //中断一个不处于活动状态的线程不需要任何作用。
+    public void interrupt() {
+        if (this != Thread.currentThread())
+            checkAccess();
+
+        synchronized (blockerLock) {
+            Interruptible b = blocker;
+            if (b != null) {
+                interrupt0();           // 只是为了设置中断标志
+                b.interrupt(this);
+                return;
+            }
+        }
+        interrupt0();
+    }
+    
+    //测试当前线程是否已经中断。线程的中断状态由该方法清除。
+    //换句话说，如果连续两次调用该方法，则第二次调用将返回 false
+    //（在第一次调用已清除了其中断状态之后，且第二次调用检验完中断状态前，当前线程再次中断的情况除外）。
+    //线程中断被忽略，因为在中断时不处于活动状态的线程将由此返回 false 的方法反映出来。
+    public static boolean interrupted() {
+        return currentThread().isInterrupted(true);
+    }
+    
+    //测试线程是否已经中断。线程的中断状态不受该方法的影响。
+    //线程中断被忽略，因为在中断时不处于活动状态的线程将由此返回 false 的方法反映出来。
+    public boolean isInterrupted() {
+        return isInterrupted(false);
+    }
+    private native boolean isInterrupted(boolean ClearInterrupted);
+    
+    //已过时。该方法最初用于破坏该线程，但不作任何清除。它所保持的任何监视器都会保持锁定状态。
+    //不过，该方法决不会被实现。即使要实现，它也极有可能以 suspend() 方式被死锁。
+    //如果目标线程被破坏时保持一个保护关键系统资源的锁，则任何线程在任何时候都无法再次访问该资源。
+    //如果另一个线程曾试图锁定该资源，则会出现死锁。这类死锁通常会证明它们自己是“冻结”的进程。
+    //有关更多信息，请参阅为何不赞成使用 Thread.stop、Thread.suspend 和 Thread.resume。
+    @Deprecated
+    public void destroy() {
+        throw new NoSuchMethodError();
+    }
+    
+    //测试线程是否处于活动状态。如果线程已经启动且尚未终止，则为活动状态。
+    public final native boolean isAlive();
+    
+    //已过时。该方法已经遭到反对，因为它具有固有的死锁倾向。
+    //如果目标线程挂起时在保护关键系统资源的监视器上保持有锁，则在目标线程重新开始以前任何线程都不能访问该资源。
+    //如果重新开始目标线程的线程想在调用 resume 之前锁定该监视器，则会发生死锁。
+    //这类死锁通常会证明自己是“冻结”的进程。
+    //有关更多信息，请参阅为何不赞成使用 Thread.stop、Thread.suspend 和 Thread.resume。
+    //挂起线程。
+    //首先，调用线程的 checkAccess 方法，且不带任何参数。这可能抛出 SecurityException（在当前线程中）。
+    //如果线程处于活动状态则被挂起，且不再有进一步的活动，除非重新开始。
+    @Deprecated
+    public final void suspend() {
+        checkAccess();
+        suspend0();
+    }
+    
+    //已过时。该方法只与 suspend() 一起使用，但 suspend() 已经遭到反对，因为它具有死锁倾向。
+    //有关更多信息，请参阅为何不赞成使用 Thread.stop、Thread.suspend 和 Thread.resume。
+    //重新开始挂起的进程。
+    //首先，调用线程的 checkAccess 方法，且不带任何参数。这可能抛出 SecurityException（在当前线程中）。
+    //如果线程处于活动状态但被挂起，则它会在执行过程中重新开始并允许继续活动。
+    @Deprecated
+    public final void resume() {
+        checkAccess();
+        resume0();
+    }
+    
+    //
+    
   }
 ```
