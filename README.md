@@ -9,3 +9,5 @@
 * <a href="https://github.com/wuping5719/Reading-Java-SourceCode/tree/master/JDK1.7/java/lang/ThreadRelated">ThreadRelated</a>
 
 * <a href="https://github.com/wuping5719/Reading-Java-SourceCode/tree/master/JDK1.7/java/lang/ThrowableRelated">ThrowableRelated</a>
+
+* <a href="https://github.com/wuping5719/Reading-Java-SourceCode/tree/master/JDK1.7/java/lang/PrimitiveTypes">PrimitiveTypes</a>
