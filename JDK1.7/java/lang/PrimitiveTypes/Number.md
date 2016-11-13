@@ -13,5 +13,23 @@
     
     //以 long 形式返回指定的数值。这可能涉及到舍入或取整。
     public abstract long longValue();
+    
+    //以 float 形式返回指定的数值。这可能会涉及到舍入。
+    public abstract float floatValue();
+    
+    //以 double 形式返回指定的数值。这可能会涉及到舍入。
+    public abstract double doubleValue();
+    
+    //以 byte 形式返回指定的数值。这可能会涉及到舍入或取整。
+    public byte byteValue() {
+        return (byte)intValue();
+    }
+    
+    //以 short 形式返回指定的数值。这可能会涉及到舍入或取整。
+    public short shortValue() {
+        return (short)intValue();
+    }
+    
+    private static final long serialVersionUID = -8742448824652078965L;
   }
 ```
