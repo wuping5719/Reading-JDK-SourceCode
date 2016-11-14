@@ -172,7 +172,25 @@
         return 19;
     }
     
-    //
+    //将 string 参数解析为有符号的 long，基数由第二个参数指定。
+    //字符串中的字符必须为指定基数中的数字（由 Character.digit(char, int) 是否返回一个非负值来确定），
+    //除非第一个字符为 ASCII 字符的减号 '-' ( '\u002D')，它表示一个负值。返回得到的 long 值。
+    //注意，不允许将字符 L ('\u004C') 和 l ('\u006C') 作为类型指示符出现在字符串的结尾处，
+    //而这一点在 Java 编程语言源代码中是允许的——除非 L 或 l 以大于 22 的基数形式出现。
+    //如果出现以下情形之一，则抛出 NumberFormatException 类型的异常：
+    //   第一个参数是 null 或零长度的字符串。
+    //   radix 小于 Character.MIN_RADIX 或者大于 Character.MAX_RADIX。
+    //   任何字符串的字符都不是指定基数的数字，除非第一个字符是减号 '-' ('\u002d')，假定字符串的长度大于 1。
+    //   字符串表示的值不是 long 类型的值。
+    //示例：
+    //    parseLong("0", 10) returns 0L
+    //    parseLong("473", 10) returns 473L
+    //    parseLong("-0", 10) returns 0L
+    //    parseLong("-FF", 16) returns -255L
+    //    parseLong("1100110", 2) returns 102L
+    //    parseLong("99", 8) returns NumberFormatException
+    //    parseLong("Hazelnut", 10) returns NumberFormatException
+    //    parseLong("Hazelnut", 36) returns 1356099454469L
     public static long parseLong(String s, int radix) throws NumberFormatException {
         if (s == null) {
             throw new NumberFormatException("null");
@@ -229,6 +247,14 @@
         return negative ? result : -result;
     }
     
-    //
+    //将 string 参数解析为有符号十进制 long。字符串中的字符必须都是十进制数字，
+    //除非第一个字符是 ASCII 字符的减号 '-' ( \u002D')，它表示一个负值。
+    //返回得到的 long 值，该值与用该参数和基数 10 作为参数的 parseLong(java.lang.String, int) 方法得到的值非常相似。
+    //注意，不允许将字符 L ('\u004C') 和 l ('\u006C') 作为类型指示符出现在字符串的结尾处，
+    //这一点在 Java 编程语言源代码中是允许的。
+    public static long parseLong(String s) throws NumberFormatException {
+        return parseLong(s, 10);
+    }
+    
   }
 ```
