@@ -249,7 +249,8 @@
     
     //将 string 参数解析为有符号十进制 long。字符串中的字符必须都是十进制数字，
     //除非第一个字符是 ASCII 字符的减号 '-' ( \u002D')，它表示一个负值。
-    //返回得到的 long 值，该值与用该参数和基数 10 作为参数的 parseLong(java.lang.String, int) 方法得到的值非常相似。
+    //返回得到的 long 值，该值与用该参数和基数 10 
+    //作为参数的 parseLong(java.lang.String, int) 方法得到的值非常相似。
     //注意，不允许将字符 L ('\u004C') 和 l ('\u006C') 作为类型指示符出现在字符串的结尾处，
     //这一点在 Java 编程语言源代码中是允许的。
     public static long parseLong(String s) throws NumberFormatException {
