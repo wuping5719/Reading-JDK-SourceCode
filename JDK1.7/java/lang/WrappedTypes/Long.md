@@ -54,5 +54,181 @@
         return new String(buf, charPos, (65 - charPos));
     }
     
+    //以十六进制无符号整数形式返回 long 参数的字符串表示形式。
+    //如果参数为负，则无符号 long 值为该参数加上 2^64；否则，它等于该参数。
+    //此值将被转换为不带附加前导 0 的十六进制（基数 16）ASCII 数字字符串。
+    //如果无符号大小为零，则该数字由单个零字符 '0' 表示 ('\u0030')；
+    //否则，无符号大小表示形式中的第一个字符将不是零字符。下列字符都被用作十六进制数字：
+    //   0123456789abcdef
+    //这些是从 '\u0030' 到 '\u0039' 和从 '\u0061' 到 '\u0066' 的字符。
+    //如果需要使用大写字母，则可以在结果上调用 String.toUpperCase() 方法：
+    //   Long.toHexString(n).toUpperCase()
+    public static String toHexString(long i) {
+        return toUnsignedString(i, 4);
+    }
+    
+    //以八进制无符号整数形式返回 long 参数的字符串表示形式。
+    //如果参数为负，则无符号 long 值为该参数加上 2^64；否则，它等于该参数。
+    //此值将被转换为不带附加前导 0 的八进制（基数 8）ASCII 数字字符串。
+    //如果无符号大小为零，则该数字用单个零字符 '0' ('\u0030') 表示，
+    //否则无符号大小表示形式中的第一个字符将不是零字符。以下字符都用作八进制数字：
+    //  01234567
+    //这些是从 '\u0030' 到 '\u0037' 的字符。
+    public static String toOctalString(long i) {
+        return toUnsignedString(i, 3);
+    }
+    
+    //以二进制无符号整数形式返回 long 参数的字符串表示形式。
+    //如果参数为负数，则无符号 long 值为该参数加上 2^64；否则，它等于该参数。
+    //此值将被转换为不带附加前导 0 的二进制（基数 2）ASCII 数字字符串。
+    //如果无符号大小为零，则用单个零字符 '0' 表示它 ('\u0030')；
+    //否则，无符号大小表示形式中的第一个字符将不是零字符。
+    //字符 '0' ('\u0030') 和 '1' ('\u0031') 被用作二进制位。
+    public static String toBinaryString(long i) {
+        return toUnsignedString(i, 1);
+    }
+    
+    //将整数转换为无符号数。
+    private static String toUnsignedString(long i, int shift) {
+        char[] buf = new char[64];
+        int charPos = 64;
+        int radix = 1 << shift;
+        long mask = radix - 1;
+        do {
+            buf[--charPos] = Integer.digits[(int)(i & mask)];
+            i >>>= shift;
+        } while (i != 0);
+        return new String(buf, charPos, (64 - charPos));
+    }
+    
+    //返回表示指定 long 的 String 对象。
+    //该参数被转换为有符号的十进制表示形式，并作为字符串返回，
+    //该字符串与用该参数和基数 10 作为参数的 toString(long, int) 方法所得到的值非常相似。
+    public static String toString(long i) {
+        if (i == Long.MIN_VALUE)
+            return "-9223372036854775808";
+        int size = (i < 0) ? stringSize(-i) + 1 : stringSize(i);
+        char[] buf = new char[size];
+        getChars(i, size, buf);
+        return new String(buf, true);
+    }
+    
+    //将代表long i的字符存储到字符数组buf
+    static void getChars(long i, int index, char[] buf) {
+        long q;
+        int r;
+        int charPos = index;
+        char sign = 0;
+
+        if (i < 0) {
+            sign = '-';
+            i = -i;
+        }
+
+        // Get 2 digits/iteration using longs until quotient fits into an int
+        while (i > Integer.MAX_VALUE) {
+            q = i / 100;
+            // really: r = i - (q * 100);
+            r = (int)(i - ((q << 6) + (q << 5) + (q << 2)));
+            i = q;
+            buf[--charPos] = Integer.DigitOnes[r];
+            buf[--charPos] = Integer.DigitTens[r];
+        }
+
+        // Get 2 digits/iteration using ints
+        int q2;
+        int i2 = (int)i;
+        while (i2 >= 65536) {
+            q2 = i2 / 100;
+            // really: r = i2 - (q * 100);
+            r = i2 - ((q2 << 6) + (q2 << 5) + (q2 << 2));
+            i2 = q2;
+            buf[--charPos] = Integer.DigitOnes[r];
+            buf[--charPos] = Integer.DigitTens[r];
+        }
+
+        // 更小的数字通过快速模式处理
+        // assert(i2 <= 65536, i2);
+        for (;;) {
+            q2 = (i2 * 52429) >>> (16+3);
+            r = i2 - ((q2 << 3) + (q2 << 1));  // r = i2-(q2*10) ...
+            buf[--charPos] = Integer.digits[r];
+            i2 = q2;
+            if (i2 == 0) break;
+        }
+        if (sign != 0) {
+            buf[--charPos] = sign;
+        }
+    }
+    
+    //要求正整数
+    static int stringSize(long x) {
+        long p = 10;
+        for (int i=1; i<19; i++) {
+            if (x < p)
+                return i;
+            p = 10*p;
+        }
+        return 19;
+    }
+    
+    //
+    public static long parseLong(String s, int radix) throws NumberFormatException {
+        if (s == null) {
+            throw new NumberFormatException("null");
+        }
+
+        if (radix < Character.MIN_RADIX) {
+            throw new NumberFormatException("radix " + radix +
+                                            " less than Character.MIN_RADIX");
+        }
+        if (radix > Character.MAX_RADIX) {
+            throw new NumberFormatException("radix " + radix +
+                                            " greater than Character.MAX_RADIX");
+        }
+
+        long result = 0;
+        boolean negative = false;
+        int i = 0, len = s.length();
+        long limit = -Long.MAX_VALUE;
+        long multmin;
+        int digit;
+
+        if (len > 0) {
+            char firstChar = s.charAt(0);
+            if (firstChar < '0') { // Possible leading "+" or "-"
+                if (firstChar == '-') {
+                    negative = true;
+                    limit = Long.MIN_VALUE;
+                } else if (firstChar != '+')
+                    throw NumberFormatException.forInputString(s);
+
+                if (len == 1) // Cannot have lone "+" or "-"
+                    throw NumberFormatException.forInputString(s);
+                i++;
+            }
+            multmin = limit / radix;
+            while (i < len) {
+                // Accumulating negatively avoids surprises near MAX_VALUE
+                digit = Character.digit(s.charAt(i++),radix);
+                if (digit < 0) {
+                    throw NumberFormatException.forInputString(s);
+                }
+                if (result < multmin) {
+                    throw NumberFormatException.forInputString(s);
+                }
+                result *= radix;
+                if (result < limit + digit) {
+                    throw NumberFormatException.forInputString(s);
+                }
+                result -= digit;
+            }
+        } else {
+            throw NumberFormatException.forInputString(s);
+        }
+        return negative ? result : -result;
+    }
+    
+    //
   }
 ```
